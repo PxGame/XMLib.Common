@@ -360,13 +360,9 @@ namespace XMLib
         /// <summary>
         /// 持续时间
         /// </summary>
-        protected float duration { get; set; } = 0f;
+        public float duration { get; set; } = 0.033f;
 
         public override Color color { get; set; } = DrawUtility.defualtColor;
-
-        [Conditional("UNITY_EDITOR")]
-        [DebuggerStepThrough]
-        public void SetDuration(float duration) => this.duration = duration;
 
         [DebuggerStepThrough]
         public override void DrawLine(Vector3 start, Vector3 end)
