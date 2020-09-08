@@ -300,11 +300,9 @@ namespace XMLib
         /// </summary>
         public static Vector3[] CalcCapsuleVertex2D(float height, float radius, Matrix4x4 matrix, int subdivide = 30)
         {
-            float halfHeight = (height - radius * 2.0f) / 2f;
-            if (halfHeight < 0f)
-            {
-                halfHeight = 0f;
-            }
+            float diameter = 2.0f * radius;
+            height = height < diameter ? diameter : height;
+            float halfHeight = (height - diameter) / 2.0f;
             Vector3[] upArc = CalcArcVertex(radius, 180, 90, matrix * Matrix4x4.Translate(Vector3.up * halfHeight), false, subdivide);
             Vector3[] downArc = CalcArcVertex(radius, 180, -90, matrix * Matrix4x4.Translate(Vector3.down * halfHeight), false, subdivide);
             return ArrayUtility.Combine(upArc, downArc);

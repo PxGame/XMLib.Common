@@ -176,7 +176,7 @@ namespace XMLib
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public void DrawCapture2D(float height, float radius, Matrix4x4 matrix)
+        public void DrawCapsule2D(float height, float radius, Matrix4x4 matrix)
         {
             Vector3[] vertices = MathUtility.CalcCapsuleVertex2D(height, radius, matrix, subdivide);
             DrawPolygon(vertices);
@@ -187,28 +187,32 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawCapsule(float height, float radius, Matrix4x4 matrix)
         {
-            if (radius <= 0)
-            {
-                return;
-            }
-
-            float diameter = radius * 2.0f;
-            if (height < diameter)
-            {
-                height = diameter;
-            }
+            float diameter = 2.0f * radius;
+            height = height < diameter ? diameter : height;
 
             Vector3[] vertices = MathUtility.CalcCapsuleVertex2D(height, radius, matrix, subdivide);
-            Vector3[] vertices2 = MathUtility.CalcCapsuleVertex2D(height, radius, matrix * Matrix4x4.Rotate(Quaternion.Euler(0f, 90f, 0f)), subdivide);
+            Vector3[] vertices2 = MathUtility.CalcCapsuleVertex2D(height, radius, matrix * Matrix4x4.Rotate(Quaternion.Euler(0.0f, 90.0f, 0.0f)), subdivide);
             DrawPolygon(vertices);
             DrawPolygon(vertices2);
 
-            float halfHeight = (height - radius * 2.0f) / 2f;
-            Vector3 upPoint = Vector3.up * halfHeight;
-            Vector3 downPoint = Vector3.down * halfHeight;
-            Quaternion rotation = Quaternion.Euler(90f, 0f, 0f);
-            DrawCircle(radius, matrix * Matrix4x4.TRS(upPoint, rotation, Vector3.one));
-            DrawCircle(radius, matrix * Matrix4x4.TRS(downPoint, rotation, Vector3.one));
+            float offset = (height - diameter) / 2.0f;
+            Vector3 highPos = new Vector3(0.0f, offset, 0.0f);
+            Vector3 lowPos = new Vector3(0.0f, -offset, 0.0f);
+            Quaternion rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
+            DrawCircle(radius, matrix * Matrix4x4.TRS(highPos, rotation, Vector3.one));
+            DrawCircle(radius, matrix * Matrix4x4.TRS(lowPos, rotation, Vector3.one));
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
+        public void DrawCapsule(Vector3 lowPos, Vector3 highPos, float radius)
+        {
+            Vector3 dir = highPos - lowPos;
+            float height = dir.magnitude + radius * 2f;
+            Quaternion rotation = Quaternion.FromToRotation(Vector3.up, dir.normalized);
+            Vector3 pos = (highPos + lowPos) / 2.0f;
+            Matrix4x4 matrix = Matrix4x4.TRS(pos, rotation, Vector3.one);
+            DrawCapsule(height, radius, matrix);
         }
 
         #region Extersion
@@ -227,16 +231,16 @@ namespace XMLib
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public void DrawCapsule(Vector3 point1, Vector3 point2, float radius, Color color)
+        public void DrawCapsule(Vector3 lowPos, Vector3 highPos, float radius, Color color)
         {
             PushAndSetColor(color);
-            DrawCapture(point1, point2, radius);
+            DrawCapsule(lowPos, highPos, radius);
             PopColor();
         }
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public void DrawCapsule(float height, float radius, Matrix4x4 matrix, Color color)
+        public void DrawCapsule(float height, float radius, Matrix4x4 matrix,Color color)
         {
             PushAndSetColor(color);
             DrawCapsule(height, radius, matrix);
