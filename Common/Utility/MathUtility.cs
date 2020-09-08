@@ -298,9 +298,13 @@ namespace XMLib
         /// <summary>
         /// 计算胶囊顶点序列
         /// </summary>
-        public static Vector3[] CalcCaptureVertex(float height, float radius, Matrix4x4 matrix, int subdivide = 30)
+        public static Vector3[] CalcCapsuleVertex2D(float height, float radius, Matrix4x4 matrix, int subdivide = 30)
         {
-            float halfHeight = height / 2.0f;
+            float halfHeight = (height - radius * 2.0f) / 2f;
+            if (halfHeight < 0f)
+            {
+                halfHeight = 0f;
+            }
             Vector3[] upArc = CalcArcVertex(radius, 180, 90, matrix * Matrix4x4.Translate(Vector3.up * halfHeight), false, subdivide);
             Vector3[] downArc = CalcArcVertex(radius, 180, -90, matrix * Matrix4x4.Translate(Vector3.down * halfHeight), false, subdivide);
             return ArrayUtility.Combine(upArc, downArc);
