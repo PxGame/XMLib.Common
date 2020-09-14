@@ -100,6 +100,19 @@ namespace XMLib
             value.z = FFixed(value.z);
             return value;
         }
+        /// <summary>
+        /// 小于精度时则置0
+        /// </summary>
+        /// <param name="value">值</param>
+        /// <returns>结果</returns>
+        public static Vector3 FFixedV4(Vector4 value)
+        {
+            value.x = FFixed(value.x);
+            value.y = FFixed(value.y);
+            value.z = FFixed(value.z);
+            value.w = FFixed(value.w);
+            return value;
+        }
 
         /// <summary>
         /// 浮点数是否相等
