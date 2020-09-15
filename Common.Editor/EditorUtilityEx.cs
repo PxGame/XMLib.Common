@@ -40,6 +40,16 @@ namespace XMLib
             return resourceDirectory;
         }
 
+        public static void OpenFolder(string folderPath)
+        {
+            if (!Path.IsPathRooted(folderPath))
+            {
+                folderPath = Path.Combine(UnityEngine.Application.dataPath, "..", folderPath).Replace("\\", "/");
+            }
+            string path = $"file://{folderPath}";
+            UnityEngine.Application.OpenURL(path);
+        }
+
         public static string ValidFilePath(string filePath)
         {
             int index = 0;
