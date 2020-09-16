@@ -18,33 +18,53 @@ namespace XMLib
         {
             return type == typeof(string) ? string.Empty : Activator.CreateInstance(type);
         }
-
+        #region ConvertTo Ext
         public static T ConvertTo<T>(this object from, T defaultValue)
         {
-            return (T)ConvertTo(from, typeof(T), defaultValue);
+            return (T)ConvertTo(from, typeof(T), false, defaultValue);
         }
 
         public static object ConvertTo(this object from, Type to, object defaultValue)
+        {
+            return ConvertTo(from, to, false, defaultValue);
+        }
+
+        public static T ConvertAutoTo<T>(this object from)
+        {
+            return (T)ConvertTo(from, typeof(T), true, null);
+        }
+
+        public static object ConvertAutoTo(this object from, Type to)
+        {
+            return ConvertTo(from, to, true, null);
+        }
+
+        #endregion
+
+        public static object ConvertTo(this object from, Type to, bool autoDefault, object defaultValue)
         {
             try
             {
                 if (!ConvertToChecker(from.GetType(), to))
                 {
-                    return defaultValue;
+                    return autoDefault ? CreateInstance(to) : defaultValue;
                 }
                 return ConvertTo(from, to);
             }
             catch
             {
-                return defaultValue;
+                return autoDefault ? CreateInstance(to) : defaultValue;
             }
         }
-
 
         public static object ConvertTo(this object from, Type to)
         {
             if (to.IsEnum)
             {
+                if (from is string str)
+                {
+                    return Enum.Parse(to, str, true);
+                }
                 return Enum.ToObject(to, from);
             }
 
@@ -69,23 +89,8 @@ namespace XMLib
                 return true;
             }
 
-            if (to.IsEnum)
-            {
-                switch (Type.GetTypeCode(from))
-                {
-                    case TypeCode.Int16:
-                    case TypeCode.Int32:
-                    case TypeCode.Int64:
-                    case TypeCode.UInt16:
-                    case TypeCode.UInt32:
-                    case TypeCode.UInt64:
-                    case TypeCode.SByte:
-                    case TypeCode.Byte:
-                        return true;
-                }
-            }
-
-            if (PrimitiveConvert(from, to))
+            if (typeof(IConvertible).IsAssignableFrom(from) &&
+                typeof(IConvertible).IsAssignableFrom(to))
             {
                 return true;
             }
@@ -93,6 +98,7 @@ namespace XMLib
             return false;
         }
 
+        /*
         static private bool PrimitiveConvert(Type from, Type to)
         {
             if (!(from.IsPrimitive && to.IsPrimitive))
@@ -119,7 +125,6 @@ namespace XMLib
                     default: return false;
                 }
 
-            // Possible conversions from Byte follow.
             if (typeCodeFrom == TypeCode.Byte)
                 switch (typeCodeTo)
                 {
@@ -136,7 +141,6 @@ namespace XMLib
                     default: return false;
                 }
 
-            // Possible conversions from SByte follow.
             if (typeCodeFrom == TypeCode.SByte)
                 switch (typeCodeTo)
                 {
@@ -149,7 +153,6 @@ namespace XMLib
                     default: return false;
                 }
 
-            // Possible conversions from UInt16 follow.
             if (typeCodeFrom == TypeCode.UInt16)
                 switch (typeCodeTo)
                 {
@@ -163,7 +166,6 @@ namespace XMLib
                     default: return false;
                 }
 
-            // Possible conversions from Int16 follow.
             if (typeCodeFrom == TypeCode.Int16)
                 switch (typeCodeTo)
                 {
@@ -175,7 +177,6 @@ namespace XMLib
                     default: return false;
                 }
 
-            // Possible conversions from UInt32 follow.
             if (typeCodeFrom == TypeCode.UInt32)
                 switch (typeCodeTo)
                 {
@@ -187,7 +188,6 @@ namespace XMLib
                     default: return false;
                 }
 
-            // Possible conversions from Int32 follow.
             if (typeCodeFrom == TypeCode.Int32)
                 switch (typeCodeTo)
                 {
@@ -198,7 +198,6 @@ namespace XMLib
                     default: return false;
                 }
 
-            // Possible conversions from UInt64 follow.
             if (typeCodeFrom == TypeCode.UInt64)
                 switch (typeCodeTo)
                 {
@@ -208,7 +207,6 @@ namespace XMLib
                     default: return false;
                 }
 
-            // Possible conversions from Int64 follow.
             if (typeCodeFrom == TypeCode.Int64)
                 switch (typeCodeTo)
                 {
@@ -218,7 +216,6 @@ namespace XMLib
                     default: return false;
                 }
 
-            // Possible conversions from Single follow.
             if (typeCodeFrom == TypeCode.Single)
                 switch (typeCodeTo)
                 {
@@ -228,5 +225,6 @@ namespace XMLib
                 }
             return false;
         }
+        */
     }
 }
