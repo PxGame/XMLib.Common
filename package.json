@@ -5,7 +5,7 @@
     "description": "XMLib 公共库",
     "unity": "2019.1",
     "dependencies": {
-        "com.peterxiang.xmlib.thirdparty": "https://github.com/PxGame/XMLib.ThirdParty.git"
+        "com.peterxiang.xmlib.thirdparty": "https://github.com/PxGame/XMLib.ThirdParty.git#1.0.0"
     },
     "keywords": [],
     "author": {
