@@ -21,6 +21,54 @@ namespace XMLib
     /// </summary>
     public static class EditorGUILayoutEx
     {
+        public static List<T> DragAndDropBox<T>(string text, params GUILayoutOption[] options) where T : UnityEngine.Object
+        {
+            string[] paths = DragAndDropBox($"{text}", options);
+            List<T> results = new List<T>();
+
+            for (int i = 0; i < paths.Length; i++)
+            {
+                T obj = AssetDatabase.LoadAssetAtPath<T>(paths[i]);
+                if (obj != null)
+                {
+                    results.Add(obj);
+                }
+            }
+
+            return results;
+        }
+
+        public static string[] DragAndDropBox(string text, params GUILayoutOption[] options)
+        {
+            Rect rect = EditorGUILayout.GetControlRect(options);
+            Event evt = Event.current;
+
+            string[] results = null;
+
+            switch (evt.type)
+            {
+                case EventType.DragUpdated:
+                case EventType.DragPerform:
+                    if (rect.Contains(evt.mousePosition))
+                    {
+                        evt.Use();
+                        DragAndDrop.visualMode = DragAndDropVisualMode.Generic;
+                    }
+                    break;
+                case EventType.DragExited:
+                    if (rect.Contains(evt.mousePosition))
+                    {
+                        evt.Use();
+                        results = DragAndDrop.paths;
+                    }
+                    break;
+            }
+
+            GUI.Box(rect, text, "groupbox");
+
+            return results ?? Array.Empty<string>();
+        }
+
         public delegate void ItemDrawerCallback<T>(int index, ref bool selected, T obj) where T : class;
 
         public static int DrawList<T>(IList<T> list, int selectIndex, ref Vector2 scrollPos, Action<Action<T>> adder, ItemDrawerCallback<T> itemDrawer) where T : class
@@ -29,68 +77,88 @@ namespace XMLib
 
             CheckSelectIndex(ref selectIndex, list);
 
-            scrollPos = GUILayout.BeginScrollView(scrollPos);
-            GUILayout.BeginVertical();
-            for (int i = 0; i < list.Count; i++)
+            bool isAdd = false;
+            bool isRemove = false;
+
+            using (var sv = new GUILayout.ScrollViewScope(scrollPos))
             {
-                T obj = list[i];
-                bool selected = selectIndex == i;
-                bool oldSelected = selected;
-
-                GUILayout.BeginHorizontal();
-                drawer(i, ref selected, obj);
-                GUILayout.EndHorizontal();
-                GUILayout.Space(2);
-
-                if (selected)
+                using (var v2 = new GUILayout.VerticalScope())
                 {
-                    selectIndex = i;
-                }
-                else if (oldSelected)
-                {
-                    selectIndex = -1;
-                }
-            }
-            GUILayout.FlexibleSpace();
-            GUILayout.EndVertical();
-            GUILayout.EndScrollView();
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        T obj = list[i];
+                        bool selected = selectIndex == i;
+                        bool oldSelected = selected;
 
-            GUILayout.BeginVertical("IN Footer");
+                        using (var h3 = new GUILayout.HorizontalScope())
+                        {
+                            drawer(i, ref selected, obj);
+                        }
+                        GUILayout.Space(2);
 
-            if (selectIndex != -1)
-            {
-                GUILayout.BeginHorizontal();
-                if (GUILayout.Button("上移") && selectIndex - 1 >= 0)
-                {
-                    GUI.FocusControl(null);
-                    T wrapObj = list[selectIndex];
-                    list[selectIndex] = list[selectIndex - 1];
-                    list[selectIndex - 1] = wrapObj;
-                    selectIndex -= 1;
-                }
-                if (GUILayout.Button("下移") && selectIndex + 1 < list.Count)
-                {
-                    GUI.FocusControl(null);
-                    T wrapObj = list[selectIndex];
-                    list[selectIndex] = list[selectIndex + 1];
-                    list[selectIndex + 1] = wrapObj;
-                    selectIndex += 1;
+                        if (selected)
+                        {
+                            selectIndex = i;
+                        }
+                        else if (oldSelected)
+                        {
+                            selectIndex = -1;
+                        }
+                    }
+                    GUILayout.FlexibleSpace();
                 }
 
-                if (GUILayout.Button("不选"))
-                {
-                    GUI.FocusControl(null);
-                    selectIndex = -1;
-                }
-
-                GUILayout.EndHorizontal();
+                scrollPos = sv.scrollPosition;
             }
 
-            GUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("添加"))
+            using (var v = new GUILayout.VerticalScope("IN Footer"))
             {
-                GUI.FocusControl(null);
+                if (selectIndex != -1)
+                {
+                    using (var h2 = new GUILayout.HorizontalScope())
+                    {
+                        if (GUILayout.Button("上移") && selectIndex - 1 >= 0)
+                        {
+                            GUI.FocusControl(null);
+                            T wrapObj = list[selectIndex];
+                            list[selectIndex] = list[selectIndex - 1];
+                            list[selectIndex - 1] = wrapObj;
+                            selectIndex -= 1;
+                        }
+                        if (GUILayout.Button("下移") && selectIndex + 1 < list.Count)
+                        {
+                            GUI.FocusControl(null);
+                            T wrapObj = list[selectIndex];
+                            list[selectIndex] = list[selectIndex + 1];
+                            list[selectIndex + 1] = wrapObj;
+                            selectIndex += 1;
+                        }
+
+                        if (GUILayout.Button("不选"))
+                        {
+                            GUI.FocusControl(null);
+                            selectIndex = -1;
+                        }
+                    }
+                }
+
+                using (var h2 = new GUILayout.HorizontalScope())
+                {
+                    if (GUILayout.Button("添加"))
+                    {
+                        GUI.FocusControl(null);
+                        isAdd = true;
+                    }
+                    if (GUILayout.Button("删除"))
+                    {
+                        GUI.FocusControl(null);
+                        isRemove = true;
+                    }
+                }
+            }
+
+            if (isAdd)
+            {//必须放在外面，否则GUILayout会报错
                 adder((t) =>
                 {
                     if (t == null)
@@ -102,11 +170,11 @@ namespace XMLib
                     selectIndex = list.Count - 1;
                 });
             }
-            if (GUILayout.Button("删除"))
+
+            if (isRemove)
             {
                 if (selectIndex >= 0)
                 {
-                    GUI.FocusControl(null);
                     list.RemoveAt(selectIndex);
                     CheckSelectIndex(ref selectIndex, list);
                 }
@@ -115,11 +183,6 @@ namespace XMLib
                     EditorUtility.DisplayDialog("提示", "请选择一项", "确定");
                 }
             }
-
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndVertical();
-
             return selectIndex;
 
             int CheckSelectIndex(ref int index, IList<T> target)

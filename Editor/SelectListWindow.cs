@@ -23,7 +23,7 @@ namespace XMLib
 
         public static void ShowTypeWithAttr<T>(Action<Type> callback) where T : Attribute
         {
-            List<Type> types = AssemblyUtility.FindAllTypeWithAttr<T>();
+            List<Type> types = TypeCache.GetTypesWithAttribute<T>().ToList();//AssemblyUtility.FindAllTypeWithAttr<T>();
             List<string> typeNames = types.Select(t => $"{t.Name} <{t.Namespace}>").ToList();
             Show(typeNames, t => callback(types[t]));
         }
@@ -37,7 +37,7 @@ namespace XMLib
             win._list.AddRange(lists);
             win._onCallback = callback;
 
-            win.ShowAuxWindow();
+            win.ShowModal();
         }
 
         private List<string> _list = new List<string>();
@@ -53,56 +53,60 @@ namespace XMLib
 
         private void DrawTool()
         {
-            GUILayout.BeginVertical("HelpBox");
-            GUILayout.BeginHorizontal();
-            _search = EditorGUILayout.TextField("", _search, "SearchTextField");
-
-            if (string.IsNullOrEmpty(_search))
+            using (var v = new GUILayout.VerticalScope("HelpBox"))
             {
-                GUILayout.Label("", "SearchCancelButtonEmpty");
-            }
-            else
-            {
-                if (GUILayout.Button("", "SearchCancelButton"))
+                using (var h = new GUILayout.HorizontalScope())
                 {
-                    GUI.FocusControl(null);
-                    _search = "";
+                    _search = EditorGUILayout.TextField("", _search, "SearchTextField");
+
+                    if (string.IsNullOrEmpty(_search))
+                    {
+                        GUILayout.Label("", "SearchCancelButtonEmpty");
+                    }
+                    else
+                    {
+                        if (GUILayout.Button("", "SearchCancelButton"))
+                        {
+                            GUI.FocusControl(null);
+                            _search = "";
+                        }
+                    }
                 }
             }
-            GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
         }
 
         private void DrawList()
         {
-            GUILayout.BeginVertical("HelpBox");
-            _scroll = GUILayout.BeginScrollView(_scroll);
-
-            string searchLow = _search.ToLower();
-
-            for (int i = 0; i < _list.Count; i++)
+            using (var v = new GUILayout.VerticalScope("HelpBox"))
             {
-                string str = _list[i];
-
-                if (!string.IsNullOrEmpty(searchLow))
+                using (var sv = new GUILayout.ScrollViewScope(_scroll))
                 {
-                    string strLow = str.ToLower();
+                    string searchLow = _search.ToLower();
 
-                    if (!strLow.Contains(searchLow))
+                    for (int i = 0; i < _list.Count; i++)
                     {
-                        continue;
-                    }
-                }
+                        string str = _list[i];
 
-                if (GUILayout.Button(str, "ShurikenModuleTitle"))
-                {
-                    GUI.FocusControl(null);
-                    Selected(i);
+                        if (!string.IsNullOrEmpty(searchLow))
+                        {
+                            string strLow = str.ToLower();
+
+                            if (!strLow.Contains(searchLow))
+                            {
+                                continue;
+                            }
+                        }
+
+                        if (GUILayout.Button(str, "ShurikenModuleTitle"))
+                        {
+                            GUI.FocusControl(null);
+                            Selected(i);
+                        }
+                    }
+
+                    _scroll = sv.scrollPosition;
                 }
             }
-
-            GUILayout.EndScrollView();
-            GUILayout.EndVertical();
         }
 
         private void Selected(int i)
