@@ -38,9 +38,8 @@ namespace XMLib
             return results;
         }
 
-        public static string[] DragAndDropBox(string text, params GUILayoutOption[] options)
+        public static string[] GetRectDragAndDrop(Rect rect)
         {
-            Rect rect = EditorGUILayout.GetControlRect(options);
             Event evt = Event.current;
 
             string[] results = null;
@@ -64,9 +63,15 @@ namespace XMLib
                     break;
             }
 
-            GUI.Box(rect, text, "groupbox");
-
             return results ?? Array.Empty<string>();
+        }
+
+        public static string[] DragAndDropBox(string text, params GUILayoutOption[] options)
+        {
+            Rect rect = EditorGUILayout.GetControlRect(options);
+            string[] results = GetRectDragAndDrop(rect);
+            GUI.Box(rect, text, "groupbox");
+            return results;
         }
 
         public delegate void ItemDrawerCallback<T>(int index, ref bool selected, T obj) where T : class;
