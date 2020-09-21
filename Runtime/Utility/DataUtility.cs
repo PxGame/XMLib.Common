@@ -22,11 +22,16 @@ namespace XMLib
     {
         #region json
 
-        public static JsonSerializerSettings jsonSetting = new JsonSerializerSettings()
+        public static JsonSerializerSettings jsonSetting;
+
+        static DataUtility()
         {
-            TypeNameHandling = TypeNameHandling.Auto,
-            //FloatFormatHandling = FloatFormatHandling.DefaultValue,
-        };
+            jsonSetting = new JsonSerializerSettings()
+            {
+                TypeNameHandling = TypeNameHandling.Auto,
+                Formatting = Formatting.Indented,
+            };
+        }
 
         public static string ToJson<T>(T obj)
         {
