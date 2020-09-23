@@ -151,6 +151,22 @@ namespace XMLib
             return ByteToAngle(AngleToByte(angle));
         }
 
+        public static float AngleYFromDir(Vector3 dir)
+        {
+            dir.y = 0f;//在同一平面旋转
+            return Vector3.SignedAngle(Vector3.forward, dir, Vector3.up);
+        }
+
+        public static byte ByteAngleYFromDir(Vector3 dir)
+        {
+            return AngleToByte(AngleYFromDir(dir));
+        }
+        
+        public static float FixedByteAngleYFromDir(Vector3 dir)
+        {
+            return FixedByteAngle(AngleYFromDir(dir));
+        }
+
         #endregion byte 与 angle 的映射 ， 现在有bug
 
         /// <summary>
