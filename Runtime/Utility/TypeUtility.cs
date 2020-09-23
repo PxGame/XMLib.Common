@@ -18,6 +18,21 @@ namespace XMLib
         {
             return type == typeof(string) ? string.Empty : Activator.CreateInstance(type);
         }
+        public static T CreateInstance<T>()
+        {
+            return (T)CreateInstance(typeof(T));
+        }
+
+        public static object GetDefaultValue(Type type)
+        {
+            return type.IsValueType ? Activator.CreateInstance(type) : null;
+        }
+
+        public static T GetDefaultValue<T>()
+        {
+            return (T)GetDefaultValue(typeof(T));
+        }
+
         #region ConvertTo Ext
         public static T ConvertTo<T>(this object from, T defaultValue)
         {
@@ -31,12 +46,12 @@ namespace XMLib
 
         public static T ConvertAutoTo<T>(this object from)
         {
-            return (T)ConvertTo(from, typeof(T), true, null);
+            return (T)ConvertTo(from, typeof(T), true, GetDefaultValue(typeof(T)));
         }
 
         public static object ConvertAutoTo(this object from, Type to)
         {
-            return ConvertTo(from, to, true, null);
+            return ConvertTo(from, to, true, GetDefaultValue(to));
         }
 
         #endregion
