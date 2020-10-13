@@ -12,10 +12,17 @@ using System;
 
 namespace XMLib
 {
+    public interface IPackageData
+    {
+        object rawValue { get; }
+    }
+
     [Serializable]
-    public struct PFloat
+    public struct PFloat : IPackageData
     {
         public float value;
+
+        public object rawValue => (float)this;
 
         public static implicit operator float(PFloat v) => v.value;
 
@@ -23,9 +30,10 @@ namespace XMLib
     }
 
     [Serializable]
-    public struct PInt
+    public struct PInt : IPackageData
     {
         public int value;
+        public object rawValue => (int)this;
 
         public static implicit operator int(PInt v) => v.value;
 
@@ -33,9 +41,10 @@ namespace XMLib
     }
 
     [Serializable]
-    public struct PString
+    public struct PString : IPackageData
     {
         public string value;
+        public object rawValue => (string)this;
 
         public static implicit operator string(PString v) => v.value;
 
@@ -43,9 +52,10 @@ namespace XMLib
     }
 
     [Serializable]
-    public struct PBool
+    public struct PBool : IPackageData
     {
         public bool value;
+        public object rawValue => (bool)this;
 
         public static implicit operator bool(PBool v) => v.value;
 
@@ -53,10 +63,12 @@ namespace XMLib
     }
 
     [Serializable]
-    public struct PVector2
+    public struct PVector2 : IPackageData
     {
         public float x;
         public float y;
+
+        public object rawValue => (Vector2)this;
 
         public static implicit operator Vector2(PVector2 v) => new Vector2(v.x, v.y);
 
@@ -64,11 +76,12 @@ namespace XMLib
     }
 
     [Serializable]
-    public struct PVector3
+    public struct PVector3 : IPackageData
     {
         public float x;
         public float y;
         public float z;
+        public object rawValue => (Vector3)this;
 
         public static implicit operator Vector3(PVector3 v) => new Vector3(v.x, v.y, v.z);
 
