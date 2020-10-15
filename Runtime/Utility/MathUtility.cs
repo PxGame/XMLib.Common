@@ -157,11 +157,16 @@ namespace XMLib
             return Vector3.SignedAngle(Vector3.forward, dir, Vector3.up);
         }
 
+        public static Vector3 AngleYToDir(float yAngle)
+        {
+            return Quaternion.AngleAxis(yAngle, Vector3.up) * Vector3.forward;
+        }
+
         public static byte ByteAngleYFromDir(Vector3 dir)
         {
             return AngleToByte(AngleYFromDir(dir));
         }
-        
+
         public static float FixedByteAngleYFromDir(Vector3 dir)
         {
             return FixedByteAngle(AngleYFromDir(dir));

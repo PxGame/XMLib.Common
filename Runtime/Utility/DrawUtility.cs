@@ -240,7 +240,7 @@ namespace XMLib
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public void DrawCapsule(float height, float radius, Matrix4x4 matrix,Color color)
+        public void DrawCapsule(float height, float radius, Matrix4x4 matrix, Color color)
         {
             PushAndSetColor(color);
             DrawCapsule(height, radius, matrix);
@@ -426,6 +426,23 @@ namespace XMLib
         public float duration { get; set; } = 0.033f;
 
         public override Color color { get; set; } = DrawUtility.defualtColor;
+
+        protected Stack<float> _durationStack = new Stack<float>();
+
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
+        public void PushAndSetDuration(float duration)
+        {
+            _durationStack.Push(this.duration);
+            this.duration = duration;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
+        public void PopDuration()
+        {
+            this.duration = _durationStack.Count > 0 ? _durationStack.Pop() : this.duration;
+        }
 
         [DebuggerStepThrough]
         public override void DrawLine(Vector3 start, Vector3 end)
