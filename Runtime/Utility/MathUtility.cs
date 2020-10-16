@@ -100,6 +100,7 @@ namespace XMLib
             value.z = FFixed(value.z);
             return value;
         }
+
         /// <summary>
         /// 小于精度时则置0
         /// </summary>
@@ -159,7 +160,7 @@ namespace XMLib
 
         public static Vector3 AngleYToDir(float yAngle)
         {
-            return Quaternion.AngleAxis(yAngle, Vector3.up) * Vector3.forward;
+            return (Quaternion.AngleAxis(yAngle, Vector3.up) * Vector3.forward).normalized;
         }
 
         public static byte ByteAngleYFromDir(Vector3 dir)
