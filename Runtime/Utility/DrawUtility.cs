@@ -28,14 +28,11 @@ namespace XMLib
         [DebuggerStepThrough]
         public abstract void DrawLine(Vector3 start, Vector3 end);
 
-        [Conditional("UNITY_EDITOR")]
-        [DebuggerStepThrough]
-        public abstract void DrawPolygonFill(Vector3[] vertices);
-
-        public bool fillConvexHull;
         public virtual Color color { get; set; }
         public int subdivide = 30;
-        public Color outlineColor { get; set; } = Color.white * 0.7f;
+        public bool fillColor;
+        public bool fillColorWithOutline = true;
+        public Color outlineColor => new Color(1, 1, 1, color.a);
 
         protected Stack<Color> _colorStack = new Stack<Color>();
 
@@ -70,20 +67,36 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawPolygon(Vector3[] vertices)
         {
-            if (fillConvexHull)
+            if (fillColor)
             {
-                DrawPolygonFill(vertices);
-                PushAndSetColor(outlineColor);
-            }
+                DrawPolygonFall(vertices);
 
+                if (fillColorWithOutline)
+                {
+                    PushAndSetColor(outlineColor);
+                    for (int i = vertices.Length - 1, j = 0; j < vertices.Length; i = j, j++)
+                    {
+                        DrawLine(vertices[i], vertices[j]);
+                    }
+                    PopColor();
+                }
+            }
+            else
+            {
+                for (int i = vertices.Length - 1, j = 0; j < vertices.Length; i = j, j++)
+                {
+                    DrawLine(vertices[i], vertices[j]);
+                }
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
+        public virtual void DrawPolygonFall(Vector3[] vertices)
+        {
             for (int i = vertices.Length - 1, j = 0; j < vertices.Length; i = j, j++)
             {
                 DrawLine(vertices[i], vertices[j]);
-            }
-
-            if (fillConvexHull)
-            {
-                PopColor();
             }
         }
 
@@ -106,29 +119,31 @@ namespace XMLib
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public void DrawSphere(float radius, Matrix4x4 matrix)
+        public virtual void DrawSphere(float radius, Matrix4x4 matrix)
         {
             Matrix4x4 lookMatrix = Matrix4x4.identity;
 
 #if UNITY_EDITOR
             UnityEditor.SceneView sceneView = UnityEditor.SceneView.currentDrawingSceneView;
-            if (sceneView != null && !sceneView.in2DMode)
+            if (sceneView != null)
             {
                 Camera cam = sceneView.camera;
                 var cameraTrans = cam.transform;
-                var rotation = Quaternion.FromToRotation(Vector3.back, -cameraTrans.forward);
-                lookMatrix = Matrix4x4.Rotate(rotation);
+                var rotation = Quaternion.LookRotation(cameraTrans.position - matrix.MultiplyPoint(Vector3.zero));
+                lookMatrix = Matrix4x4.TRS(matrix.MultiplyPoint(Vector3.zero), rotation, matrix.lossyScale);
+                DrawCircle(radius, lookMatrix);
             }
-            DrawCircle(radius, matrix * lookMatrix);
 #endif
 
             //绘制边界
-            bool fillConvexHull = this.fillConvexHull;
-            this.fillConvexHull = false;
+            bool oldFillColor = fillColor;
+            fillColor = false;
+            PushAndSetColor(outlineColor);
             DrawCircle(radius, matrix);
             DrawCircle(radius, matrix * Matrix4x4.Rotate(Quaternion.Euler(0, 90, 0)));
             DrawCircle(radius, matrix * Matrix4x4.Rotate(Quaternion.Euler(90, 0, 0)));
-            this.fillConvexHull = fillConvexHull;
+            PopColor();
+            fillColor = oldFillColor;
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -182,7 +197,6 @@ namespace XMLib
             DrawPolygon(vertices);
         }
 
-
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
         public void DrawCapsule(float height, float radius, Matrix4x4 matrix)
@@ -216,7 +230,6 @@ namespace XMLib
         }
 
         #region Extersion
-
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
@@ -382,7 +395,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawCameraFrustumCorners(Camera camera, Rect viewRect, Vector3 target, Color color)
         {
-            float distance = Vector3.Distance(camera.transform.position, target);
+            //float distance = Vector3.Distance(camera.transform.position, target);
             Transform transform = camera.transform;
             Vector3[] vts = new Vector3[4];
             camera.CalculateFrustumCorners(viewRect, Vector3.Distance(transform.position, target), Camera.MonoOrStereoscopicEye.Mono, vts);
@@ -407,7 +420,7 @@ namespace XMLib
         }
 
         [DebuggerStepThrough]
-        public override void DrawPolygonFill(Vector3[] vertices)
+        public override void DrawPolygonFall(Vector3[] vertices)
         {
 #if UNITY_EDITOR
             UnityEditor.Handles.DrawAAConvexPolygon(vertices);
@@ -449,10 +462,31 @@ namespace XMLib
         {
             UnityEngine.Debug.DrawLine(start, end, color, duration);
         }
+    }
+
+#if UNITY_EDITOR
+
+    /// <summary>
+    /// HandlesDrawer
+    /// </summary>
+    public class HandlesDrawer : DrawUtility
+    {
+        public readonly static HandlesDrawer H = new HandlesDrawer();
+
+        public override Color color { get => UnityEditor.Handles.color; set => UnityEditor.Handles.color = value; }
 
         [DebuggerStepThrough]
-        public override void DrawPolygonFill(Vector3[] vertices)
+        public override void DrawLine(Vector3 start, Vector3 end)
         {
+            UnityEditor.Handles.DrawLine(start, end);
+        }
+
+        [DebuggerStepThrough]
+        public override void DrawPolygonFall(Vector3[] vertices)
+        {
+            UnityEditor.Handles.DrawAAConvexPolygon(vertices);
         }
     }
+
+#endif
 }

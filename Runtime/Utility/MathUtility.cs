@@ -231,8 +231,6 @@ namespace XMLib
         /// <returns></returns>
         public static Vector3[] CalcBoxVertex(Vector3 size, Matrix4x4 matrix)
         {
-            Vector3 halfSize = size / 2f;
-
             Vector3[] points = CalcBoxVertex(size);
 
             for (int i = 0; i < points.Length; i++)
