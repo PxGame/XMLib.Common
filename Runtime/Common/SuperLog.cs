@@ -8,45 +8,72 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using UnityEngine;
 
 namespace XMLib
 {
     /// <summary>
-    /// LogController
+    /// 日志工具
     /// </summary>
     public class SuperLog
     {
-        public static string title { get; set; } = "XMLib";
+        public static string tag { get; set; } = "XMLib";
 
-        private static string titleStr => (string.IsNullOrEmpty(title) ? "" : $"[{title}]");
+        public static void Log(LogType type, string msg)
+        {
+            UnityEngine.Debug.unityLogger.Log(type, tag, msg);
+        }
+
+        [Conditional("UNITY_ASSERTIONS")]
+        public static void Assert(bool condition, string message)
+        {
+            if (!condition)
+            {
+                Log(LogType.Assert, message);
+            }
+        }
+
+        [Conditional("UNITY_ASSERTIONS")]
+        public static void Assert(bool condition)
+        {
+            Assert(condition, "Assertion failed");
+        }
+
+        public static void LogException(Exception exception)
+        {
+            UnityEngine.Debug.unityLogger.LogException(exception);
+        }
 
         public static void Log(string msg)
         {
-            Debug.Log(titleStr + msg);
+            Log(LogType.Log, msg);
         }
 
         public static void LogError(string msg)
         {
-            Debug.LogError(titleStr + msg);
+            Log(LogType.Error, msg);
         }
 
         public static void LogWarning(string msg)
         {
-            Debug.LogWarning(titleStr + msg);
+            Log(LogType.Warning, msg);
         }
     }
 
+    /// <summary>
+    /// 日志工具
+    /// </summary>
     public class SuperLogHandler
     {
         private readonly Func<string> title;
         private readonly string titleColor;
         private readonly SuperLogHandler parent;
 
-        public static SuperLogHandler Create(Func<string> title, Color titleColor, SuperLogHandler parent = null)
+        public static SuperLogHandler Create(Func<string> titleBuilder, Color titleColor, SuperLogHandler parent = null)
         {
-            return new SuperLogHandler(title, titleColor, parent);
+            return new SuperLogHandler(titleBuilder, titleColor, parent);
         }
 
         public static SuperLogHandler Create(string title, Color titleColor, SuperLogHandler parent = null)
@@ -78,9 +105,9 @@ namespace XMLib
             return Create(title, titleColor, this);
         }
 
-        public SuperLogHandler CreateSub(Func<string> title, Color titleColor)
+        public SuperLogHandler CreateSub(Func<string> titleBuilder, Color titleColor)
         {
-            return Create(title, titleColor, this);
+            return Create(titleBuilder, titleColor, this);
         }
 
         protected string GetTitleStr()
@@ -88,7 +115,16 @@ namespace XMLib
             string titleStr = null;
             try
             {
-                titleStr = (parent?.GetTitleStr() ?? string.Empty) + $"[<color=#{titleColor}>{title()}</color>]";
+                StringBuilder builder = new StringBuilder();
+                if (parent != null)
+                {
+                    builder.Append(parent.GetTitleStr());
+                }
+                if (title != null)
+                {
+                    builder.Append($"[<color=#{titleColor}>{title()}</color>]");
+                }
+                titleStr = builder.ToString();
             }
             catch (Exception ex)
             {
@@ -101,8 +137,7 @@ namespace XMLib
         private string CreateMsg(string msg, params object[] args)
         {
             string titleStr = GetTitleStr();
-            string formatStr = $"{titleStr}{msg}";
-            return string.Format(formatStr, args);
+            return string.Format($"{titleStr}{msg}", args);
         }
 
         public void Log(string msg, params object[] args)
@@ -118,6 +153,18 @@ namespace XMLib
         public void LogWarning(string msg, params object[] args)
         {
             SuperLog.LogWarning(CreateMsg(msg, args));
+        }
+
+        [Conditional("UNITY_ASSERTIONS")]
+        public void Assert(bool condition, string msg, params object[] args)
+        {
+            SuperLog.Assert(condition, CreateMsg(msg, args));
+        }
+
+        [Conditional("UNITY_ASSERTIONS")]
+        public void Assert(bool condition)
+        {
+            SuperLog.Assert(condition, CreateMsg("Assertion failed"));
         }
     }
 }
