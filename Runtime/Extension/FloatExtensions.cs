@@ -5,6 +5,7 @@
  * 创建时间: 2020/9/28 15:03:53
  */
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -16,25 +17,11 @@ namespace XMLib.Extensions
     /// </summary>
     public static class FloatExtensions
     {
-        /// <summary>
-        /// Is floatA equal to zero? Takes floating point inaccuracy into account, by using Epsilon.
-        /// </summary>
-        /// <param name="floatA"></param>
-        /// <returns></returns>
-        public static bool IsEqualToZero(this float floatA)
-        {
-            return Mathf.Abs(floatA) < Mathf.Epsilon;
-        }
+        public static float Round(this float floatA, int decimals) => (float)Math.Round(floatA, decimals);
 
-        /// <summary>
-        /// Is floatA not equal to zero? Takes floating point inaccuracy into account, by using Epsilon.
-        /// </summary>
-        /// <param name="floatA"></param>
-        /// <returns></returns>
-        public static bool NotEqualToZero(this float floatA)
-        {
-            return Mathf.Abs(floatA) > Mathf.Epsilon;
-        }
+        public static bool IsEqualToZero(this float floatA) => Mathf.Abs(floatA) < Mathf.Epsilon;
+
+        public static bool NotEqualToZero(this float floatA) => Mathf.Abs(floatA) > Mathf.Epsilon;
 
         /// <summary>
         /// Wraps a float between -180 and 180.
@@ -75,9 +62,6 @@ namespace XMLib.Extensions
         /// </summary>
         /// <param name="number">The float.</param>
         /// <returns>The fraction portion of a float.</returns>
-        public static float GetFraction(this float number)
-        {
-            return number - Mathf.Floor(number);
-        }
+        public static float GetFraction(this float number) => number - Mathf.Floor(number);
     }
 }
