@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
 
 namespace XMLib
 {
@@ -69,6 +71,61 @@ namespace XMLib
                 target = $"{dir}/{fileName}_{index}{ext}";
             }
             while (true);
+        }
+
+        public static List<string> FindAssetsToGUID(string dir, string findFilter)
+        {
+            string[] findPaths = new string[] { dir };
+            string[] guids = AssetDatabase.FindAssets(findFilter, findPaths);
+            return new List<string>(guids);
+        }
+
+        public static List<string> FindAssetsToPath(string dir, string findFilter)
+        {
+            List<string> paths = FindAssetsToGUID(dir, findFilter);
+
+            //转换成path
+            for (int i = 0; i < paths.Count; i++)
+            {
+                paths[i] = AssetDatabase.GUIDToAssetPath(paths[i]);
+            }
+
+            return paths;
+        }
+
+        public static List<T> FindAssets<T>(string dir, string findFilter) where T : UnityEngine.Object
+        {
+            List<string> paths = FindAssetsToPath(dir, findFilter);
+            List<T> results = new List<T>();
+
+            foreach (var path in paths)
+            {
+                T obj = AssetDatabase.LoadAssetAtPath<T>(path);
+                if (obj != null)
+                {
+                    results.Add(obj);
+                }
+            }
+
+            return results;
+        }
+
+        public static bool OpenScene(string scenePath, OpenSceneMode mode)
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                return false;
+            }
+
+            EditorSceneManager.OpenScene(scenePath, mode);
+
+            return true;
+        }
+
+        public static bool OpenScene(SceneAsset sceneAsset, OpenSceneMode mode)
+        {
+            string scenePath = AssetDatabase.GetAssetPath(sceneAsset);
+            return OpenScene(scenePath, mode);
         }
     }
 }
