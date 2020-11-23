@@ -25,6 +25,30 @@ namespace XMLib
         public const float PI = Mathf.PI;
         public const float PI2 = PI * 2.0f;
 
+        public static float Remap(float value, float fromMin, float fromMax, float toMin, float toMax)
+        {
+            float scale = Mathf.Clamp01((value - fromMin) / (fromMax - fromMin));
+            value = (toMax - toMin) * scale + toMin;
+            return value;
+        }
+
+        public static int Remap(int value, int fromMin, int fromMax, int toMin, int toMax)
+        {
+            float scale = Mathf.Clamp01((value - fromMin) / (float)(fromMax - fromMin));
+            value = Mathf.RoundToInt((toMax - toMin) * scale) + toMin;
+            return value;
+        }
+
+        public static float Remap01(float value, float fromMin, float fromMax)
+        {
+            return Remap(value, fromMin, fromMax, 0, 1);
+        }
+
+        public static int Remap01(int value, int fromMin, int fromMax)
+        {
+            return Remap(value, fromMin, fromMax, 0, 1);
+        }
+
         /// <summary>
         /// 跳跃速度
         /// </summary>

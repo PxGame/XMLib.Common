@@ -17,51 +17,55 @@ namespace XMLib.Extensions
     /// </summary>
     public static class FloatExtensions
     {
-        public static float Round(this float floatA, int decimals) => (float)Math.Round(floatA, decimals);
+        public static float Remap(this float value, float fromMin, float fromMax, float toMin, float toMax) => MathUtility.Remap(value, fromMin, fromMax, toMin, toMax);
 
-        public static bool IsEqualToZero(this float floatA) => Mathf.Abs(floatA) < Mathf.Epsilon;
+        public static float Remap01(this float value, float fromMin, float fromMax) => MathUtility.Remap01(value, fromMin, fromMax);
 
-        public static bool NotEqualToZero(this float floatA) => Mathf.Abs(floatA) > Mathf.Epsilon;
+        public static float Round(this float value, int decimals) => (float)Math.Round(value, decimals);
+
+        public static bool IsEqualToZero(this float value) => Mathf.Abs(value) < Mathf.Epsilon;
+
+        public static bool NotEqualToZero(this float value) => Mathf.Abs(value) > Mathf.Epsilon;
 
         /// <summary>
         /// Wraps a float between -180 and 180.
         /// </summary>
-        /// <param name="toWrap">The float to wrap.</param>
+        /// <param name="value">The float to wrap.</param>
         /// <returns>A value between -180 and 180.</returns>
-        public static float Wrap180(this float toWrap)
+        public static float Wrap180(this float value)
         {
-            toWrap %= 360.0f;
-            if (toWrap < -180.0f)
+            value %= 360.0f;
+            if (value < -180.0f)
             {
-                toWrap += 360.0f;
+                value += 360.0f;
             }
-            else if (toWrap > 180.0f)
+            else if (value > 180.0f)
             {
-                toWrap -= 360.0f;
+                value -= 360.0f;
             }
-            return toWrap;
+            return value;
         }
 
         /// <summary>
         /// Wraps a float between 0 and 1.
         /// </summary>
-        /// <param name="toWrap">The float to wrap.</param>
+        /// <param name="value">The float to wrap.</param>
         /// <returns>A value between 0 and 1.</returns>
-        public static float Wrap1(this float toWrap)
+        public static float Wrap1(this float value)
         {
-            toWrap %= 1.0f;
-            if (toWrap < 0.0f)
+            value %= 1.0f;
+            if (value < 0.0f)
             {
-                toWrap += 1.0f;
+                value += 1.0f;
             }
-            return toWrap;
+            return value;
         }
 
         /// <summary>
         /// Gets the fraction portion of a float.
         /// </summary>
-        /// <param name="number">The float.</param>
+        /// <param name="value">The float.</param>
         /// <returns>The fraction portion of a float.</returns>
-        public static float GetFraction(this float number) => number - Mathf.Floor(number);
+        public static float GetFraction(this float value) => value - Mathf.Floor(value);
     }
 }
