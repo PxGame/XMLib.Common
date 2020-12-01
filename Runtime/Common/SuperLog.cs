@@ -71,20 +71,27 @@ namespace XMLib
         private readonly string titleColor;
         private readonly SuperLogHandler parent;
 
-        public static SuperLogHandler Create(Func<string> titleBuilder, Color titleColor, SuperLogHandler parent = null)
+        public static SuperLogHandler Create(Func<string> titleBuilder, Color? titleColor = null, SuperLogHandler parent = null)
         {
             return new SuperLogHandler(titleBuilder, titleColor, parent);
         }
 
-        public static SuperLogHandler Create(string title, Color titleColor, SuperLogHandler parent = null)
+        public static SuperLogHandler Create(string title, Color? titleColor = null, SuperLogHandler parent = null)
         {
             return new SuperLogHandler(() => title, titleColor, parent);
         }
 
-        private SuperLogHandler(Func<string> title, Color titleColor, SuperLogHandler parent = null)
+        private SuperLogHandler(Func<string> title, Color? titleColor = null, SuperLogHandler parent = null)
         {
+            if (!titleColor.HasValue)
+            {
+                UnityEngine.Random.InitState(title().GetHashCode());
+                Color color = UnityEngine.Random.ColorHSV(0, 1, 1, 1, 1, 1, 1, 1);
+                titleColor = color;
+            }
+
             this.title = title;
-            this.titleColor = ColorUtility.ToHtmlStringRGB(titleColor);
+            this.titleColor = ColorUtility.ToHtmlStringRGB(titleColor.Value);
             this.parent = parent;
 
             //检查是否循环依赖
@@ -100,12 +107,12 @@ namespace XMLib
             }
         }
 
-        public SuperLogHandler CreateSub(string title, Color titleColor)
+        public SuperLogHandler CreateSub(string title, Color? titleColor = null)
         {
             return Create(title, titleColor, this);
         }
 
-        public SuperLogHandler CreateSub(Func<string> titleBuilder, Color titleColor)
+        public SuperLogHandler CreateSub(Func<string> titleBuilder, Color? titleColor = null)
         {
             return Create(titleBuilder, titleColor, this);
         }
