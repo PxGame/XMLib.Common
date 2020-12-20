@@ -65,6 +65,16 @@ namespace XMLib
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
+        public void DrawLines(Vector3[] vertices)
+        {
+            for (int i = 1; i < vertices.Length; i++)
+            {
+                DrawLine(vertices[i - 1], vertices[i]);
+            }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
         public void DrawPolygon(Vector3[] vertices)
         {
             if (fillColor)
@@ -230,6 +240,15 @@ namespace XMLib
         }
 
         #region Extersion
+
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
+        public void DrawLines(Vector3[] vertices, Color color)
+        {
+            PushAndSetColor(color);
+            DrawLines(vertices);
+            PopColor();
+        }
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
