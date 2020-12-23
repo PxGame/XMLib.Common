@@ -14,6 +14,11 @@ namespace XMLib
     /// </summary>
     public class RuntimeException : Exception
     {
+        public RuntimeException()
+            : base(FixedMessage(string.Empty))
+        {
+        }
+
         public RuntimeException(string format, params object[] args)
             : base(FixedMessage(format, args))
         {
