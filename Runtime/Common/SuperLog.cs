@@ -21,8 +21,15 @@ namespace XMLib
     {
         public static string tag { get; set; } = "XMLib";
 
+        public static bool enable { get; set; } = true;
+
         public static void Log(LogType type, string msg)
         {
+            if (!enable)
+            {
+                return;
+            }
+
             UnityEngine.Debug.unityLogger.Log(type, tag, msg);
         }
 
@@ -70,6 +77,13 @@ namespace XMLib
         private readonly Func<string> title;
         private readonly string titleColor;
         private readonly SuperLogHandler parent;
+        private bool _enable = true;
+
+        public bool enable
+        {
+            get => _enable && (parent != null && parent.enable);
+            set => _enable = value;
+        }
 
         public static SuperLogHandler Create(Func<string> titleBuilder, Color? titleColor = null, SuperLogHandler parent = null)
         {
@@ -149,28 +163,48 @@ namespace XMLib
 
         public void Log(string msg, params object[] args)
         {
+            if (!enable)
+            {
+                return;
+            }
             SuperLog.Log(CreateMsg(msg, args));
         }
 
         public void LogError(string msg, params object[] args)
         {
+            if (!enable)
+            {
+                return;
+            }
             SuperLog.LogError(CreateMsg(msg, args));
         }
 
         public void LogWarning(string msg, params object[] args)
         {
+            if (!enable)
+            {
+                return;
+            }
             SuperLog.LogWarning(CreateMsg(msg, args));
         }
 
         [Conditional("UNITY_ASSERTIONS")]
         public void Assert(bool condition, string msg, params object[] args)
         {
+            if (!enable)
+            {
+                return;
+            }
             SuperLog.Assert(condition, CreateMsg(msg, args));
         }
 
         [Conditional("UNITY_ASSERTIONS")]
         public void Assert(bool condition)
         {
+            if (!enable)
+            {
+                return;
+            }
             SuperLog.Assert(condition, CreateMsg("Assertion failed"));
         }
     }
