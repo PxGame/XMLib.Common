@@ -110,22 +110,23 @@ namespace XMLib
             return results;
         }
 
-        public static bool OpenScene(string scenePath, OpenSceneMode mode)
+        public static bool OpenScene(string scenePath, OpenSceneMode mode, out Scene scene)
         {
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
             {
+                scene = new Scene();
                 return false;
             }
 
-            EditorSceneManager.OpenScene(scenePath, mode);
+            scene = EditorSceneManager.OpenScene(scenePath, mode);
 
             return true;
         }
 
-        public static bool OpenScene(SceneAsset sceneAsset, OpenSceneMode mode)
+        public static bool OpenScene(SceneAsset sceneAsset, OpenSceneMode mode, out Scene scene)
         {
             string scenePath = AssetDatabase.GetAssetPath(sceneAsset);
-            return OpenScene(scenePath, mode);
+            return OpenScene(scenePath, mode, out scene);
         }
     }
 }
