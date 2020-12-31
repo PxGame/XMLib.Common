@@ -81,7 +81,7 @@ namespace XMLib
 
         public bool enable
         {
-            get => _enable && (parent != null && parent.enable);
+            get => _enable && (parent == null || parent.enable);
             set => _enable = value;
         }
 

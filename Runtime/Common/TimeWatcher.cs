@@ -101,7 +101,7 @@ namespace XMLib
 
             //
 
-            UnityEngine.Debug.Log(builder);
+            SuperLog.Log(builder.ToString());
 
             //
         }
