@@ -37,7 +37,7 @@ namespace XMLib
             win._list.AddRange(lists);
             win._onCallback = callback;
 
-            win.ShowModal();
+            win.ShowPopup();
         }
 
         private List<string> _list = new List<string>();
