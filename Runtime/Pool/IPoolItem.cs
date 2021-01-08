@@ -7,10 +7,17 @@
 
 namespace XMLib
 {
+    public interface IPoolCallback
+    {
+        void OnPushPool();
+
+        void OnPopPool();
+    }
+
     /// <summary>
     /// IPoolItem
     /// </summary>
-    public interface IPoolItem<T>
+    public interface IPoolItem<T> : IPoolCallback
     {
         T poolTag { get; }
 
@@ -18,9 +25,5 @@ namespace XMLib
         /// 不能手动修改
         /// </summary>
         bool inPool { get; set; }
-
-        void OnPushPool();
-
-        void OnPopPool();
     }
 }
