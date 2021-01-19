@@ -6,7 +6,9 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace XMLib
 {
@@ -22,11 +24,35 @@ namespace XMLib
     [AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
     public class ObjectTypesAttribute : Attribute
     {
-        public Type[] types { get; protected set; }
-
-        public ObjectTypesAttribute(params Type[] types)
+        public Type[] types
         {
-            this.types = types;
+            get
+            {
+                HashSet<Type> list = new HashSet<Type>();
+                if (baseType != null)
+                {
+                    foreach (var item in UnityEditor.TypeCache.GetTypesDerivedFrom(baseType))
+                    {
+                        list.Add(item);
+                    }
+                }
+                if (extraTypes != null)
+                {
+                    foreach (var item in extraTypes)
+                    {
+                        list.Add(item);
+                    }
+                }
+                return list.ToArray();
+            }
+        }
+
+        public virtual Type baseType { get; set; }
+        public Type[] extraTypes { get; protected set; }
+
+        public ObjectTypesAttribute(params Type[] extraTypes)
+        {
+            this.extraTypes = extraTypes;
         }
     }
 
@@ -41,8 +67,8 @@ namespace XMLib
             typeof(PVector3),
         };
 
-        public ObjectTypesPrimaryAttribute(params Type[] types) :
-            base(ArrayUtility.Combine(types, primaryTypes))
+        public ObjectTypesPrimaryAttribute(params Type[] extraTypes) :
+            base(ArrayUtility.Combine(extraTypes, primaryTypes))
         {
         }
     }

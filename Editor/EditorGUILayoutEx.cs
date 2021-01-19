@@ -54,6 +54,7 @@ namespace XMLib
                         DragAndDrop.visualMode = DragAndDropVisualMode.Generic;
                     }
                     break;
+
                 case EventType.DragExited:
                     if (rect.Contains(evt.mousePosition))
                     {
@@ -281,7 +282,14 @@ namespace XMLib
             {
                 float oldLabelWidth = EditorGUIUtility.labelWidth;
                 EditorGUIUtility.labelWidth = CalcLabelWidth(title);
+                EditorGUILayout.BeginHorizontal();
                 int cnt = EditorGUILayout.IntField(title, objs.Count);
+                if (GUILayout.Button("+", GUILayout.Width(40)))
+                {
+                    cnt++;
+                    GUI.FocusControl(null);
+                }
+                EditorGUILayout.EndHorizontal();
                 EditorGUIUtility.labelWidth = oldLabelWidth;
 
                 int diff = cnt - objs.Count;
