@@ -209,6 +209,24 @@ namespace XMLib
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
+        public void DrawCylinder(float height, float radius, Matrix4x4 matrix)
+        {
+            Vector2 rect = new Vector2(radius * 2, height);
+            Vector3[] vertices = MathUtility.CalcRectVertex(rect, matrix);
+            Vector3[] vertices2 = MathUtility.CalcRectVertex(rect, matrix * Matrix4x4.Rotate(Quaternion.Euler(0.0f, 90.0f, 0.0f)));
+            DrawPolygon(vertices);
+            DrawPolygon(vertices2);
+
+            float offset = height / 2.0f;
+            Vector3 highPos = new Vector3(0.0f, offset, 0.0f);
+            Vector3 lowPos = new Vector3(0.0f, -offset, 0.0f);
+            Quaternion rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
+            DrawCircle(radius, matrix * Matrix4x4.TRS(highPos, rotation, Vector3.one));
+            DrawCircle(radius, matrix * Matrix4x4.TRS(lowPos, rotation, Vector3.one));
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
         public void DrawCapsule(float height, float radius, Matrix4x4 matrix)
         {
             float diameter = 2.0f * radius;
