@@ -353,6 +353,42 @@ namespace XMLib
             return GUI.skin.label.CalcSize(new GUIContent(label)).x + EditorGUI.indentLevel * GUI.skin.label.fontSize * 2;
         }
 
+
+        private static object DrawObjectCustom(out bool isDraw, GUIContent title, object obj, Type type, object[] attrs = null)
+        {
+            try
+            {
+                MethodInfo method = TypeCache.GetMethodsWithAttribute<ObjectDrawerAttribute>().FirstOrDefault(t =>
+                {
+                    if (!t.IsStatic)
+                    {
+                        return false;
+                    }
+                    ObjectDrawerAttribute od = t.GetCustomAttribute<ObjectDrawerAttribute>();
+                    if (od == null || od.type != type)
+                    {
+                        return false;
+                    }
+                    return true;
+                });
+
+                isDraw = method != null;
+                if (!isDraw)
+                {
+                    return obj;
+                }
+
+                obj = method.Invoke(null, new object[] { title, obj, type, attrs });
+                isDraw = true;
+                return obj;
+            }
+            catch
+            {
+                isDraw = false;
+                return obj;
+            }
+        }
+
         public static object DrawObject(GUIContent title, object obj, Type type, object[] attrs = null)
         {
             using (var lay = new EditorGUILayout.VerticalScope())
@@ -365,187 +401,190 @@ namespace XMLib
                 float oldLabelWidth = EditorGUIUtility.labelWidth;
                 EditorGUIUtility.labelWidth = CalcLabelWidth(title);
 
-                switch (obj)
+                obj = DrawObjectCustom(out bool isDraw, title, obj, type, attrs);
+                if (!isDraw)
                 {
-                    case float v:
-                        {
-                            RangeAttribute attr = GetTargetAttr<RangeAttribute>();
-                            obj = null == attr ? EditorGUILayout.FloatField(title, v) : EditorGUILayout.Slider(title, v, attr.min, attr.max);
-                        }
-                        break;
-
-                    case double v:
-                        obj = EditorGUILayout.DoubleField(title, v);
-                        break;
-
-                    case int v:
-                        {
-                            RangeAttribute attr = GetTargetAttr<RangeAttribute>();
-                            obj = null == attr ? EditorGUILayout.IntField(title, v) : EditorGUILayout.IntSlider(title, v, (int)attr.min, (int)attr.max);
-                        }
-                        break;
-
-                    case string v:
-                        obj = EditorGUILayout.TextField(title, v);
-                        break;
-
-                    case bool v:
-                        obj = EditorGUILayout.Toggle(title, v);
-                        break;
-
-                    case Vector2 v:
-                        {
-                            v = EditorGUILayout.Vector2Field(title, v);
-                            RangeAttribute attr = GetTargetAttr<RangeAttribute>();
-                            if (attr != null)
+                    switch (obj)
+                    {
+                        case float v:
                             {
-                                v.x = Mathf.Clamp(v.x, attr.min, attr.max);
-                                v.y = Mathf.Clamp(v.y, attr.min, attr.max);
-                                if (v.x > v.y)
-                                {
-                                    v.x = v.y;
-                                }
-
-                                using (var lay2 = new EditorGUILayout.HorizontalScope())
-                                {
-                                    GUILayout.Space(EditorGUIUtility.labelWidth);
-                                    EditorGUILayout.MinMaxSlider(ref v.x, ref v.y, attr.min, attr.max);
-                                }
+                                RangeAttribute attr = GetTargetAttr<RangeAttribute>();
+                                obj = null == attr ? EditorGUILayout.FloatField(title, v) : EditorGUILayout.Slider(title, v, attr.min, attr.max);
                             }
-                            obj = v;
-                        }
-                        break;
+                            break;
 
-                    case Vector3 v:
-                        obj = EditorGUILayout.Vector3Field(title, v);
-                        break;
+                        case double v:
+                            obj = EditorGUILayout.DoubleField(title, v);
+                            break;
 
-                    case Vector2Int v:
-                        {
-                            v = EditorGUILayout.Vector2IntField(title, v);
-                            RangeAttribute attr = GetTargetAttr<RangeAttribute>();
-                            if (attr != null)
+                        case int v:
                             {
-                                Vector2 vf = v;
-
-                                v.x = Mathf.Clamp(Mathf.RoundToInt(vf.x), (int)attr.min, (int)attr.max);
-                                v.y = Mathf.Clamp(Mathf.RoundToInt(vf.y), (int)attr.min, (int)attr.max);
-                                if (v.x > v.y)
-                                {
-                                    v.x = v.y;
-                                }
-
-                                using (var lay2 = new EditorGUILayout.HorizontalScope())
-                                {
-                                    GUILayout.Space(EditorGUIUtility.labelWidth);
-                                    EditorGUILayout.MinMaxSlider(ref vf.x, ref vf.y, attr.min, attr.max);
-                                }
-
-                                v = new Vector2Int((int)vf.x, (int)vf.y);
+                                RangeAttribute attr = GetTargetAttr<RangeAttribute>();
+                                obj = null == attr ? EditorGUILayout.IntField(title, v) : EditorGUILayout.IntSlider(title, v, (int)attr.min, (int)attr.max);
                             }
-                            obj = v;
-                        }
-                        break;
+                            break;
 
-                    case Vector3Int v:
-                        obj = EditorGUILayout.Vector3IntField(title, v);
-                        break;
+                        case string v:
+                            obj = EditorGUILayout.TextField(title, v);
+                            break;
 
-                    case Enum v:
-                        {
-                            FlagsAttribute attr = GetTargetAttr<FlagsAttribute>();
-                            obj = null == attr ? EditorGUILayout.EnumPopup(title, v) : EditorGUILayout.EnumFlagsField(title, v);
-                        }
-                        break;
+                        case bool v:
+                            obj = EditorGUILayout.Toggle(title, v);
+                            break;
 
-                    case LayerMask v:
-                        {
-                            int mask = InternalEditorUtility.LayerMaskToConcatenatedLayersMask(v);
-                            mask = EditorGUILayout.MaskField(title, mask, InternalEditorUtility.layers);
-                            obj = InternalEditorUtility.ConcatenatedLayersMaskToLayerMask(mask);
-                        }
-                        break;
-
-                    case IList v:
-                        {
-                            if (type.IsGenericType && type.GenericTypeArguments.Length == 1)
+                        case Vector2 v:
                             {
-                                Type subType = type.GenericTypeArguments[0];
-                                if (subType.IsClass || subType.IsValueType)
+                                v = EditorGUILayout.Vector2Field(title, v);
+                                RangeAttribute attr = GetTargetAttr<RangeAttribute>();
+                                if (attr != null)
                                 {
-                                    int cnt = EditorGUILayout.IntField(title, v.Count);
-                                    int diff = cnt - v.Count;
-
-                                    while (diff < 0)
+                                    v.x = Mathf.Clamp(v.x, attr.min, attr.max);
+                                    v.y = Mathf.Clamp(v.y, attr.min, attr.max);
+                                    if (v.x > v.y)
                                     {
-                                        v.RemoveAt(v.Count - 1);
-                                        diff++;
+                                        v.x = v.y;
                                     }
 
-                                    while (diff > 0)
+                                    using (var lay2 = new EditorGUILayout.HorizontalScope())
                                     {
-                                        object subObj = TypeUtility.CreateInstance(subType);
-                                        v.Add(subObj);
-                                        diff--;
+                                        GUILayout.Space(EditorGUIUtility.labelWidth);
+                                        EditorGUILayout.MinMaxSlider(ref v.x, ref v.y, attr.min, attr.max);
+                                    }
+                                }
+                                obj = v;
+                            }
+                            break;
+
+                        case Vector3 v:
+                            obj = EditorGUILayout.Vector3Field(title, v);
+                            break;
+
+                        case Vector2Int v:
+                            {
+                                v = EditorGUILayout.Vector2IntField(title, v);
+                                RangeAttribute attr = GetTargetAttr<RangeAttribute>();
+                                if (attr != null)
+                                {
+                                    Vector2 vf = v;
+
+                                    v.x = Mathf.Clamp(Mathf.RoundToInt(vf.x), (int)attr.min, (int)attr.max);
+                                    v.y = Mathf.Clamp(Mathf.RoundToInt(vf.y), (int)attr.min, (int)attr.max);
+                                    if (v.x > v.y)
+                                    {
+                                        v.x = v.y;
                                     }
 
-                                    EditorGUI.indentLevel += 1;
-                                    for (int i = 0; i < cnt; i++)
+                                    using (var lay2 = new EditorGUILayout.HorizontalScope())
                                     {
-                                        v[i] = DrawObject(new GUIContent($"{i}"), v[i], subType, attrs);
+                                        GUILayout.Space(EditorGUIUtility.labelWidth);
+                                        EditorGUILayout.MinMaxSlider(ref vf.x, ref vf.y, attr.min, attr.max);
                                     }
-                                    EditorGUI.indentLevel -= 1;
+
+                                    v = new Vector2Int((int)vf.x, (int)vf.y);
                                 }
+                                obj = v;
                             }
-                            else
+                            break;
+
+                        case Vector3Int v:
+                            obj = EditorGUILayout.Vector3IntField(title, v);
+                            break;
+
+                        case Enum v:
                             {
-                                EditorGUILayout.LabelField($"不支持 {type} 类型");
+                                FlagsAttribute attr = GetTargetAttr<FlagsAttribute>();
+                                obj = null == attr ? EditorGUILayout.EnumPopup(title, v) : EditorGUILayout.EnumFlagsField(title, v);
                             }
+                            break;
 
-                            obj = v;
-                        }
-                        break;
-
-                    default:
-                        {
-                            if (!type.IsPrimitive && (type.IsClass || type.IsValueType))
+                        case LayerMask v:
                             {
-                                FieldInfo[] fields = type.GetFields();
+                                int mask = InternalEditorUtility.LayerMaskToConcatenatedLayersMask(v);
+                                mask = EditorGUILayout.MaskField(title, mask, InternalEditorUtility.layers);
+                                obj = InternalEditorUtility.ConcatenatedLayersMaskToLayerMask(mask);
+                            }
+                            break;
 
-                                //=============================================================
-                                //查找成员显示控制
-                                Dictionary<string, bool> enableDict = EnableToggleAttribute.GetEnableDict(obj);
-                                //=============================================================
-
-                                int depth = 0;
-                                if (title != GUIContent.none)
+                        case IList v:
+                            {
+                                if (type.IsGenericType && type.GenericTypeArguments.Length == 1)
                                 {
-                                    EditorGUILayout.LabelField($"▼ {title.text}");
-                                    depth = 1;
+                                    Type subType = type.GenericTypeArguments[0];
+                                    if (subType.IsClass || subType.IsValueType)
+                                    {
+                                        int cnt = EditorGUILayout.IntField(title, v.Count);
+                                        int diff = cnt - v.Count;
+
+                                        while (diff < 0)
+                                        {
+                                            v.RemoveAt(v.Count - 1);
+                                            diff++;
+                                        }
+
+                                        while (diff > 0)
+                                        {
+                                            object subObj = TypeUtility.CreateInstance(subType);
+                                            v.Add(subObj);
+                                            diff--;
+                                        }
+
+                                        EditorGUI.indentLevel += 1;
+                                        for (int i = 0; i < cnt; i++)
+                                        {
+                                            v[i] = DrawObject(new GUIContent($"{i}"), v[i], subType, attrs);
+                                        }
+                                        EditorGUI.indentLevel -= 1;
+                                    }
+                                }
+                                else
+                                {
+                                    EditorGUILayout.LabelField($"不支持 {type} 类型");
                                 }
 
-                                EditorGUI.indentLevel += depth;
-                                foreach (var field in fields)
+                                obj = v;
+                            }
+                            break;
+
+                        default:
+                            {
+                                if (!type.IsPrimitive && (type.IsClass || type.IsValueType))
                                 {
+                                    FieldInfo[] fields = type.GetFields();
+
                                     //=============================================================
-                                    if (!EnableToggleItemAttribute.EnableChecker(field, enableDict))
-                                    {//不显示
-                                        continue;
+                                    //查找成员显示控制
+                                    Dictionary<string, bool> enableDict = EnableToggleAttribute.GetEnableDict(obj);
+                                    //=============================================================
+
+                                    int depth = 0;
+                                    if (title != GUIContent.none)
+                                    {
+                                        EditorGUILayout.LabelField($"▼ {title.text}");
+                                        depth = 1;
                                     }
-                                    //===========================================================
 
-                                    DrawField(obj, field);
+                                    EditorGUI.indentLevel += depth;
+                                    foreach (var field in fields)
+                                    {
+                                        //=============================================================
+                                        if (!EnableToggleItemAttribute.EnableChecker(field, enableDict))
+                                        {//不显示
+                                            continue;
+                                        }
+                                        //===========================================================
+
+                                        DrawField(obj, field);
+                                    }
+                                    EditorGUI.indentLevel -= depth;
                                 }
-                                EditorGUI.indentLevel -= depth;
+                                else
+                                {
+                                    EditorGUILayout.LabelField($"不支持 {type} 类型");
+                                }
                             }
-                            else
-                            {
-                                EditorGUILayout.LabelField($"不支持 {type} 类型");
-                            }
-                        }
-                        break;
+                            break;
+                    }
                 }
-
                 EditorGUIUtility.labelWidth = oldLabelWidth;
 
                 return obj;
