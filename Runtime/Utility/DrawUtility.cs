@@ -65,7 +65,7 @@ namespace XMLib
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public void DrawLines(Vector3[] vertices)
+        public void DrawLines(params Vector3[] vertices)
         {
             for (int i = 1; i < vertices.Length; i++)
             {
@@ -173,6 +173,29 @@ namespace XMLib
             DrawLine(points[0], points[1]);
             DrawLine(points[2], points[3]);
             DrawLine(points[4], points[5]);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
+        public void DrawArrow(Vector3 start, Vector3 end, float size)
+        {
+            DrawCross(size, Matrix4x4.Translate(start));
+            DrawLine(start, end);
+
+            Matrix4x4 endMatrix = Matrix4x4.TRS(end, Quaternion.FromToRotation(Vector3.up, end - start), Vector3.one);
+
+            Vector3[] leftRight = new Vector3[3];
+            Vector3[] forwardBack = new Vector3[3];
+            float angle = 60;
+            forwardBack[0] = endMatrix.MultiplyPoint(Quaternion.AngleAxis(angle, Vector3.right) * Vector3.forward * size);
+            forwardBack[1] = end;
+            forwardBack[2] = endMatrix.MultiplyPoint(Quaternion.AngleAxis(angle, Vector3.left) * Vector3.back * size);
+            leftRight[0] = endMatrix.MultiplyPoint(Quaternion.AngleAxis(angle, Vector3.forward) * Vector3.left * size);
+            leftRight[1] = end;
+            leftRight[2] = endMatrix.MultiplyPoint(Quaternion.AngleAxis(angle, Vector3.back) * Vector3.right * size);
+            DrawLines(forwardBack);
+            DrawLines(leftRight);
+            DrawLines(forwardBack[0], leftRight[0], forwardBack[2], leftRight[2], forwardBack[0]);
         }
 
         [Conditional("UNITY_EDITOR")]
