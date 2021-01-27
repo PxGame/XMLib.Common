@@ -31,10 +31,12 @@ namespace XMLib
                 HashSet<Type> list = new HashSet<Type>();
                 if (baseType != null)
                 {
+#if UNITY_EDITOR
                     foreach (var item in UnityEditor.TypeCache.GetTypesDerivedFrom(baseType))
                     {
                         list.Add(item);
                     }
+#endif
                 }
                 if (extraTypes != null)
                 {
