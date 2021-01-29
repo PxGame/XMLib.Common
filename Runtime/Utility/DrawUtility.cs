@@ -329,6 +329,18 @@ namespace XMLib
             PopColor();
         }
 
+
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
+        public void DrawPolygon(Vector3[] vertices, Matrix4x4 matrix)
+        {
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                vertices[i] = matrix.MultiplyPoint(vertices[i]);
+            }
+            DrawPolygon(vertices);
+        }
+
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
         public void DrawPolygon(Vector3[] vertices, Color color)
@@ -343,11 +355,7 @@ namespace XMLib
         public void DrawPolygon(Vector3[] vertices, Matrix4x4 matrix, Color color)
         {
             PushAndSetColor(color);
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i] = matrix.MultiplyPoint(vertices[i]);
-            }
-            DrawPolygon(vertices);
+            DrawPolygon(vertices, matrix);
             PopColor();
         }
 
