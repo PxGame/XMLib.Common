@@ -8,6 +8,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using UnityEngine;
 
 namespace XMLib
@@ -25,6 +26,18 @@ namespace XMLib
 
         public static void Push(List<T> obj) => _pool.Push(obj);
 
+        public static void Clear() => _pool.Clear();
+    }
+
+    public static class StaticPool<T> where T : class, new()
+    {
+        public static Action<T> onPush;
+        public static Action<T> onPop;
+        private static readonly SimpleObjectPool<T> _pool = new SimpleObjectPool<T>(onPush, onPop);
+
+
+        public static T Pop() => _pool.Pop();
+        public static void Push(T obj) => _pool.Push(obj);
         public static void Clear() => _pool.Clear();
     }
 }
