@@ -15,9 +15,9 @@ namespace XMLib
 {
     public static class ListPool<T>
     {
-        private static readonly SimpleObjectPool<List<T>> _pool = new SimpleObjectPool<List<T>>(null, OnPop);
+        private static readonly SimpleObjectPool<List<T>> _pool = new SimpleObjectPool<List<T>>(OnPush, null);
 
-        private static void OnPop(List<T> obj)
+        private static void OnPush(List<T> obj)
         {
             obj.Clear();
         }
@@ -35,9 +35,10 @@ namespace XMLib
         public static Action<T> onPop;
         private static readonly SimpleObjectPool<T> _pool = new SimpleObjectPool<T>(onPush, onPop);
 
-
         public static T Pop() => _pool.Pop();
+
         public static void Push(T obj) => _pool.Push(obj);
+
         public static void Clear() => _pool.Clear();
     }
 }

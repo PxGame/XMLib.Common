@@ -23,6 +23,8 @@ namespace XMLib
 
         public SimpleObjectPool(Action<T> onPush, Action<T> onPop)
         {
+            _onPush = onPush;
+            _onPop = onPop;
         }
 
         public void Push(T obj)

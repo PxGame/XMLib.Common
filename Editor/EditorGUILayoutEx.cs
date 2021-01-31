@@ -353,7 +353,6 @@ namespace XMLib
             return GUI.skin.label.CalcSize(new GUIContent(label)).x + EditorGUI.indentLevel * GUI.skin.label.fontSize * 2;
         }
 
-
         private static object DrawObjectCustom(out bool isDraw, GUIContent title, object obj, Type type, object[] attrs = null)
         {
             try
@@ -510,30 +509,69 @@ namespace XMLib
                                 if (type.IsGenericType && type.GenericTypeArguments.Length == 1)
                                 {
                                     Type subType = type.GenericTypeArguments[0];
-                                    if (subType.IsClass || subType.IsValueType)
+
+                                    using (var lay2 = new EditorGUILayout.VerticalScope("FrameBox"))
                                     {
-                                        int cnt = EditorGUILayout.IntField(title, v.Count);
-                                        int diff = cnt - v.Count;
-
-                                        while (diff < 0)
+                                        if (subType.IsClass || subType.IsValueType)
                                         {
-                                            v.RemoveAt(v.Count - 1);
-                                            diff++;
-                                        }
+                                            EditorGUIUtility.labelWidth = CalcLabelWidth(title);
+                                            EditorGUILayout.BeginHorizontal();
+                                            int cnt = EditorGUILayout.IntField(title, v.Count);
+                                            if (GUILayout.Button("+", GUILayout.Width(40)))
+                                            {
+                                                cnt++;
+                                                GUI.FocusControl(null);
+                                            }
+                                            EditorGUILayout.EndHorizontal();
+                                            EditorGUIUtility.labelWidth = oldLabelWidth;
 
-                                        while (diff > 0)
-                                        {
-                                            object subObj = TypeUtility.CreateInstance(subType);
-                                            v.Add(subObj);
-                                            diff--;
-                                        }
+                                            int diff = cnt - v.Count;
 
-                                        EditorGUI.indentLevel += 1;
-                                        for (int i = 0; i < cnt; i++)
-                                        {
-                                            v[i] = DrawObject(new GUIContent($"{i}"), v[i], subType, attrs);
+                                            while (diff < 0)
+                                            {
+                                                v.RemoveAt(v.Count - 1);
+                                                diff++;
+                                            }
+
+                                            while (diff > 0)
+                                            {
+                                                object subObj = TypeUtility.CreateInstance(subType);
+                                                v.Add(subObj);
+                                                diff--;
+                                            }
+
+                                            EditorGUI.indentLevel += 1;
+                                            for (int i = 0; i < cnt; i++)
+                                            {
+                                                using (var lay3 = new EditorGUILayout.VerticalScope("FrameBox"))
+                                                {
+                                                    v[i] = DrawObject(new GUIContent($"{i}"), v[i], subType, attrs);
+
+                                                    using (var lay4 = new EditorGUILayout.HorizontalScope())
+                                                    {
+                                                        if (GUILayout.Button("↑") && i > 0)
+                                                        {
+                                                            object swap = v[i - 1];
+                                                            v[i - 1] = v[i];
+                                                            v[i] = swap;
+                                                        }
+                                                        if (GUILayout.Button("↓") && i < cnt - 1)
+                                                        {
+                                                            object swap = v[i + 1];
+                                                            v[i + 1] = v[i];
+                                                            v[i] = swap;
+                                                        }
+                                                        if (GUILayout.Button("x"))
+                                                        {
+                                                            v.RemoveAt(i);
+                                                            i--;
+                                                            cnt--;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            EditorGUI.indentLevel -= 1;
                                         }
-                                        EditorGUI.indentLevel -= 1;
                                     }
                                 }
                                 else
@@ -559,7 +597,7 @@ namespace XMLib
                                     int depth = 0;
                                     if (title != GUIContent.none)
                                     {
-                                        EditorGUILayout.LabelField($"▼ {title.text}");
+                                        EditorGUILayout.LabelField($"{title.text}");
                                         depth = 1;
                                     }
 
