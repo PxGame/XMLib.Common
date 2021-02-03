@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Text;
 
 namespace XMLib
 {
@@ -14,10 +15,37 @@ namespace XMLib
     /// </summary>
     public static class TypeUtility
     {
+        public static string GetSimpleName(this Type type)
+        {
+            if (!type.IsGenericType)
+            {
+                return type.Name;
+            }
+
+            StringBuilder builder = new StringBuilder();
+
+            int index = type.Name.IndexOf('`');
+            builder.Append(type.Name.Remove(index));
+            builder.Append('<');
+            Type[] args = type.GetGenericArguments();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (i != 0)
+                {
+                    builder.Append(',');
+                }
+                builder.Append(args[i].GetSimpleName());
+            }
+            builder.Append('>');
+
+            return builder.ToString();
+        }
+
         public static object CreateInstance(Type type)
         {
             return type == typeof(string) ? string.Empty : Activator.CreateInstance(type);
         }
+
         public static T CreateInstance<T>()
         {
             return (T)CreateInstance(typeof(T));
@@ -34,6 +62,7 @@ namespace XMLib
         }
 
         #region ConvertTo Ext
+
         public static T ConvertTo<T>(this object from, T defaultValue)
         {
             return (T)ConvertTo(from, typeof(T), false, defaultValue);
@@ -54,7 +83,7 @@ namespace XMLib
             return ConvertTo(from, to, true, GetDefaultValue(to));
         }
 
-        #endregion
+        #endregion ConvertTo Ext
 
         public static object ConvertTo(this object from, Type to, bool autoDefault, object defaultValue)
         {

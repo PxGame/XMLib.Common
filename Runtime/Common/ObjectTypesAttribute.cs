@@ -61,12 +61,12 @@ namespace XMLib
     public class ObjectTypesPrimaryAttribute : ObjectTypesAttribute
     {
         public static readonly Type[] primaryTypes = {
-            typeof(PInt),
-            typeof(PFloat),
-            typeof(PBool),
-            typeof(PString),
-            typeof(PVector2),
-            typeof(PVector3),
+            typeof(P<int>),
+            typeof(P<float>),
+            typeof(P<bool>),
+            typeof(P<string>),
+            typeof(P<UnityEngine.Vector2>),
+            typeof(P<UnityEngine.Vector3>),
         };
 
         public ObjectTypesPrimaryAttribute(params Type[] extraTypes) :

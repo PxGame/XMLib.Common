@@ -24,7 +24,7 @@ namespace XMLib
         public static void ShowTypeWithAttr<T>(Action<Type> callback) where T : Attribute
         {
             List<Type> types = TypeCache.GetTypesWithAttribute<T>().ToList();//AssemblyUtility.FindAllTypeWithAttr<T>();
-            List<string> typeNames = types.Select(t => $"{t.Name} <{t.Namespace}>").ToList();
+            List<string> typeNames = types.Select(t => $"{t.GetSimpleName()} | {t.Namespace}").ToList();
             Show(typeNames, t => callback(types[t]));
         }
 
@@ -36,14 +36,19 @@ namespace XMLib
 
             win._list.AddRange(lists);
             win._onCallback = callback;
-
-            win.ShowPopup();
+            //win.ShowPopup();
+            win.ShowAuxWindow();
         }
 
         private List<string> _list = new List<string>();
         private Action<int> _onCallback;
         private static string _search = "";
         private Vector2 _scroll = Vector2.zero;
+        private GUIStyle _btnStyle;
+
+        private void OnEnable()
+        {
+        }
 
         private void OnGUI()
         {
@@ -77,6 +82,10 @@ namespace XMLib
 
         private void DrawList()
         {
+            if (_btnStyle == null)
+            {
+                _btnStyle = new GUIStyle("toolbarbutton") { alignment = TextAnchor.MiddleLeft };
+            }
             using (var v = new GUILayout.VerticalScope("HelpBox"))
             {
                 using (var sv = new GUILayout.ScrollViewScope(_scroll))
@@ -97,11 +106,12 @@ namespace XMLib
                             }
                         }
 
-                        if (GUILayout.Button(str, "ShurikenModuleTitle"))
+                        if (GUILayout.Button(str, _btnStyle))
                         {
                             GUI.FocusControl(null);
                             Selected(i);
                         }
+                        GUILayout.Space(2);
                     }
 
                     _scroll = sv.scrollPosition;

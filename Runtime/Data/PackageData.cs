@@ -18,77 +18,14 @@ namespace XMLib
     }
 
     [Serializable]
-    public struct PFloat : IPackageData
+    public struct P<T> : IPackageData
     {
-        public float value;
+        public T value;
 
-        public object RawValue() => (float)this;
+        public object RawValue() => (T)this;
 
-        public static implicit operator float(PFloat v) => v.value;
+        public static implicit operator T(P<T> v) => v.value;
 
-        public static implicit operator PFloat(float v) => new PFloat() { value = v };
-    }
-
-    [Serializable]
-    public struct PInt : IPackageData
-    {
-        public int value;
-
-        public object RawValue() => (int)this;
-
-        public static implicit operator int(PInt v) => v.value;
-
-        public static implicit operator PInt(int v) => new PInt() { value = v };
-    }
-
-    [Serializable]
-    public struct PString : IPackageData
-    {
-        public string value;
-
-        public object RawValue() => (string)this;
-
-        public static implicit operator string(PString v) => v.value;
-
-        public static implicit operator PString(string v) => new PString() { value = v };
-    }
-
-    [Serializable]
-    public struct PBool : IPackageData
-    {
-        public bool value;
-
-        public object RawValue() => (bool)this;
-
-        public static implicit operator bool(PBool v) => v.value;
-
-        public static implicit operator PBool(bool v) => new PBool() { value = v };
-    }
-
-    [Serializable]
-    public struct PVector2 : IPackageData
-    {
-        public float x;
-        public float y;
-
-        public object RawValue() => (Vector2)this;
-
-        public static implicit operator Vector2(PVector2 v) => new Vector2(v.x, v.y);
-
-        public static implicit operator PVector2(Vector2 v) => new PVector2() { x = v.x, y = v.y };
-    }
-
-    [Serializable]
-    public struct PVector3 : IPackageData
-    {
-        public float x;
-        public float y;
-        public float z;
-
-        public object RawValue() => (Vector3)this;
-
-        public static implicit operator Vector3(PVector3 v) => new Vector3(v.x, v.y, v.z);
-
-        public static implicit operator PVector3(Vector3 v) => new PVector3() { x = v.x, y = v.y, z = v.z };
+        public static implicit operator P<T>(T v) => new P<T>() { value = v };
     }
 }

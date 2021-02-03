@@ -242,7 +242,7 @@ namespace XMLib
             {
                 float oldLabelWidth = EditorGUIUtility.labelWidth;
                 EditorGUIUtility.labelWidth = CalcLabelWidth(title);
-                int targetIndex = EditorGUILayout.Popup(title, index, types.Select(t => t.Name).ToArray());
+                int targetIndex = EditorGUILayout.Popup(title, index, types.Select(t => t.GetSimpleName()).ToArray());
                 EditorGUIUtility.labelWidth = oldLabelWidth;
 
                 if (targetIndex != index)
@@ -258,7 +258,7 @@ namespace XMLib
                         obj = type == typeof(string) ? string.Empty : Activator.CreateInstance(type);
                     }
                 }
-                obj = DrawObject(new GUIContent($"{type.Name}"), obj, type, attrs);
+                obj = DrawObject(new GUIContent($"{type.GetSimpleName()}"), obj, type, attrs);
             }
 
             return obj;
