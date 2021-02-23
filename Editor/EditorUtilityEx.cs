@@ -12,6 +12,7 @@ using UnityEditor;
 using System.IO;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
+using System;
 
 namespace XMLib
 {
@@ -40,6 +41,34 @@ namespace XMLib
             }
 
             return resourceDirectory;
+        }
+
+        /// <summary>
+        /// 获取选择的文件
+        /// </summary>
+        /// <param name="suffixFilter"></param>
+        /// <returns></returns>
+        public static string GetSelectFile(params string[] suffixFilter)
+        {
+            string[] strs = Selection.assetGUIDs;
+            if (strs.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            string resourceFile = AssetDatabase.GUIDToAssetPath(strs[0]);
+            if (!File.Exists(resourceFile))
+            {
+                return string.Empty;
+            }
+
+            string suffix = Path.GetExtension(resourceFile);
+            if (suffixFilter.Length > 0 && Array.Exists(suffixFilter, t => 0 == string.Compare(t, suffix, true)))
+            {
+                return resourceFile;
+            }
+
+            return string.Empty;
         }
 
         public static void OpenFolder(string folderPath)
