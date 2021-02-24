@@ -30,19 +30,15 @@ namespace XMLib
 
         public virtual Color color { get; set; }
         public int subdivide = 30;
-        public bool fillColor;
-        public bool fillColorWithOutline = true;
+        public bool fillPolygon = false;
+        public bool useFillPolygonOutline = true;
         public Color outlineColor => new Color(1, 1, 1, color.a);
 
         protected Stack<Color> _colorStack = new Stack<Color>();
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public void PushColor() => _colorStack.Push(color);
-
-        [Conditional("UNITY_EDITOR")]
-        [DebuggerStepThrough]
-        public void PushAndSetColor(Color color)
+        public void PushColor(Color color)
         {
             _colorStack.Push(this.color);
             this.color = color;
@@ -77,13 +73,13 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawPolygon(Vector3[] vertices)
         {
-            if (fillColor)
+            if (fillPolygon)
             {
-                DrawPolygonFall(vertices);
+                FillPolygon(vertices);
 
-                if (fillColorWithOutline)
+                if (useFillPolygonOutline)
                 {
-                    PushAndSetColor(outlineColor);
+                    PushColor(outlineColor);
                     for (int i = vertices.Length - 1, j = 0; j < vertices.Length; i = j, j++)
                     {
                         DrawLine(vertices[i], vertices[j]);
@@ -102,7 +98,7 @@ namespace XMLib
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public virtual void DrawPolygonFall(Vector3[] vertices)
+        protected virtual void FillPolygon(Vector3[] vertices)
         {
             for (int i = vertices.Length - 1, j = 0; j < vertices.Length; i = j, j++)
             {
@@ -146,14 +142,14 @@ namespace XMLib
 #endif
 
             //绘制边界
-            bool oldFillColor = fillColor;
-            fillColor = false;
-            PushAndSetColor(outlineColor);
+            bool oldFillColor = fillPolygon;
+            fillPolygon = false;
+            PushColor(outlineColor);
             DrawCircle(radius, matrix);
             DrawCircle(radius, matrix * Matrix4x4.Rotate(Quaternion.Euler(0, 90, 0)));
             DrawCircle(radius, matrix * Matrix4x4.Rotate(Quaternion.Euler(90, 0, 0)));
             PopColor();
-            fillColor = oldFillColor;
+            fillPolygon = oldFillColor;
         }
 
         [Conditional("UNITY_EDITOR")]
@@ -286,7 +282,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawLines(Vector3[] vertices, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawLines(vertices);
             PopColor();
         }
@@ -306,7 +302,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawCapsule(Vector3 lowPos, Vector3 highPos, float radius, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawCapsule(lowPos, highPos, radius);
             PopColor();
         }
@@ -315,7 +311,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawCapsule(float height, float radius, Matrix4x4 matrix, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawCapsule(height, radius, matrix);
             PopColor();
         }
@@ -324,11 +320,10 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawLine(Vector3 start, Vector3 end, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawLine(start, end);
             PopColor();
         }
-
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
@@ -345,7 +340,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawPolygon(Vector3[] vertices, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawPolygon(vertices);
             PopColor();
         }
@@ -354,7 +349,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawPolygon(Vector3[] vertices, Matrix4x4 matrix, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawPolygon(vertices, matrix);
             PopColor();
         }
@@ -363,7 +358,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawBox(Vector3 position, Vector3 size, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawBox(size, Matrix4x4.Translate(position));
             PopColor();
         }
@@ -372,7 +367,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawSphere(Vector3 position, float radius, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawSphere(radius, Matrix4x4.Translate(position));
             PopColor();
         }
@@ -381,7 +376,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawCross(Vector3 position, float size, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawCross(size, Matrix4x4.Translate(position));
             PopColor();
         }
@@ -398,7 +393,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawArc(Vector3 position, float radius, float angle, float rotation, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawArc(position, radius, angle, rotation);
             PopColor();
         }
@@ -415,7 +410,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawRect(Vector3 position, Vector2 size, Vector3 angle, Vector3 scale, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawRect(position, size, angle, scale);
             PopColor();
         }
@@ -431,7 +426,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawRect(Vector3 position, Vector2 size, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawRect(position, size);
             PopColor();
         }
@@ -454,7 +449,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public void DrawCircle(Vector3 position, float radius, Color color)
         {
-            PushAndSetColor(color);
+            PushColor(color);
             DrawCircle(position, radius);
             PopColor();
         }
@@ -488,7 +483,7 @@ namespace XMLib
         }
 
         [DebuggerStepThrough]
-        public override void DrawPolygonFall(Vector3[] vertices)
+        protected override void FillPolygon(Vector3[] vertices)
         {
 #if UNITY_EDITOR
             UnityEditor.Handles.DrawAAConvexPolygon(vertices);
@@ -512,7 +507,7 @@ namespace XMLib
 
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public void PushAndSetDuration(float duration)
+        public void PushDuration(float duration)
         {
             _durationStack.Push(this.duration);
             this.duration = duration;
@@ -550,7 +545,7 @@ namespace XMLib
         }
 
         [DebuggerStepThrough]
-        public override void DrawPolygonFall(Vector3[] vertices)
+        protected override void FillPolygon(Vector3[] vertices)
         {
             UnityEditor.Handles.DrawAAConvexPolygon(vertices);
         }
