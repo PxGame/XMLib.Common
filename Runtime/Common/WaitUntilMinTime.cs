@@ -9,9 +9,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using XMLib;
 
-namespace AliveCell
+namespace XMLib
 {
     /// <summary>
     /// WaitUntilMinTime
@@ -34,6 +33,5 @@ namespace AliveCell
             this.predicate = predicate;
             this.startTime = currentTime;
         }
-
     }
 }
