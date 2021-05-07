@@ -32,9 +32,9 @@ namespace XMLib
         protected static string FixedMessage(string format, params object[] args)
         {
 #if UNITY_EDITOR
-            return string.Format($"<color=red>[XMLib]{format}</color>", args);
+            return string.Format($"<color=red>[{SuperLog.tag}]{format}</color>", args);
 #else
-            return string.Format($"[XMLib]{format}", args);
+            return string.Format($"[{SuperLog.tag}]{format}", args);
 #endif
         }
     }

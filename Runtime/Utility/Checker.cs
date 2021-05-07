@@ -16,7 +16,7 @@ namespace XMLib
     {
         [Conditional("UNITY_EDITOR")]
         [DebuggerStepThrough]
-        public static void IsTrue(bool value, string msg)
+        public static void Assert(bool value, string msg = "")
         {
             if (value)
             {
@@ -30,7 +30,7 @@ namespace XMLib
         [DebuggerStepThrough]
         public static void NotNull(object obj, string msg = "")
         {
-            IsTrue(obj != null, msg);
+            Assert(obj != null, msg);
         }
     }
 }
