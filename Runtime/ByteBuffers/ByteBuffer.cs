@@ -60,7 +60,13 @@ namespace XMLib
             int typeId = TypeManager.Get<T>();
             Checker.Assert(typeId != 0);
             int dataSize = TypeManager.SizeOf(typeId);
-            Checker.Assert(dataSize + headerSize < freeSize);
+
+            int expendSize = dataSize + headerSize;
+            if (expendSize > freeSize)
+            {
+                int newCapacity = (expendSize > capacity ? expendSize : capacity) + capacity;
+                Resize(newCapacity);
+            }
 
             //写头，由前往后
             BBDataHeader* dataHeaderPtr = (BBDataHeader*)(_bufferPtr + headerPtr->frontUsedSize);
@@ -70,7 +76,7 @@ namespace XMLib
             dataHeaderPtr->offset = headerPtr->backUsedSize;
 
             //写数据，由后往前
-            T* data = GetData<T>(dataHeaderPtr);
+            T* dataPtr = GetData<T>(dataHeaderPtr);
 
             //更新参数
             headerPtr->count++;
@@ -78,7 +84,7 @@ namespace XMLib
             headerPtr->frontUsedSize += dataHeaderSize;
             headerPtr->backUsedSize += dataSize;
 
-            return new BBData<T>(this, dataHeaderPtr, data);
+            return new BBData<T>(this, dataHeaderPtr, dataPtr);
         }
 
         public BBData<T> Write<T>(T data) where T : unmanaged, IByteBufferData
@@ -90,12 +96,19 @@ namespace XMLib
 
         public void RemoveUnused()
         {
-            int size = usedSize;
+            Resize(usedSize);
+        }
+
+        public void Resize(int size)
+        {
+            Checker.Assert(size >= capacity);
             IntPtr nextBuffer = (IntPtr)UnsafeUtility.Malloc(size, 1, Allocator.Persistent);
             UnsafeUtility.MemCpy((void*)nextBuffer, (void*)_bufferPtr, headerPtr->frontUsedSize);
-            UnsafeUtility.MemCpy((void*)(nextBuffer + headerPtr->frontUsedSize), (void*)(_bufferPtr + headerPtr->capacity - headerPtr->frontUsedSize), headerPtr->frontUsedSize);
+            UnsafeUtility.MemCpy((void*)(nextBuffer + headerPtr->frontUsedSize), (void*)(_bufferPtr + headerPtr->capacity - headerPtr->backUsedSize), headerPtr->backUsedSize);
             UnsafeUtility.Free((void*)_bufferPtr, Allocator.Persistent);
             _bufferPtr = nextBuffer;
+
+            //更新参数
             headerPtr->capacity = size;
             headerPtr->version++;
         }

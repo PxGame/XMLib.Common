@@ -46,28 +46,29 @@ namespace XMLib
             }
         }
 
-        internal BBData(ByteBuffer buffer, BBDataHeader* headerPtr, T* bodyPtr)
+        internal BBData(ByteBuffer buffer, BBDataHeader* headerPtr, T* dataPtr)
         {
-            Checker.Assert(buffer != null && headerPtr != null && bodyPtr != null);
+            Checker.Assert(buffer != null && headerPtr != null && dataPtr != null);
 
             _buffer = buffer;
             _version = buffer.version;
             _id = headerPtr->id;
             _headerPtrCache = headerPtr;
-            _dataPtrCache = bodyPtr;
+            _dataPtrCache = dataPtr;
         }
 
         public BBData(ByteBuffer buffer, int id)
         {
             Checker.Assert(buffer != null);
-            _buffer = buffer;
-            _version = buffer.version;
-            _id = id;
             _headerPtrCache = buffer.FindHeaderPtrWithID(id);
             Checker.Assert(_headerPtrCache != null);
 
             _dataPtrCache = buffer.GetData<T>(_headerPtrCache);
             Checker.Assert(_dataPtrCache != null);
+
+            _buffer = buffer;
+            _version = buffer.version;
+            _id = id;
         }
 
         private void CheckVersion()
