@@ -59,7 +59,7 @@ namespace XMLib
 
         public BBData(ByteBuffer buffer, int id)
         {
-            Checker.Assert(buffer != null);
+            Checker.Assert(buffer != null && id >= 0);
             _headerPtrCache = buffer.FindHeaderPtrWithID(id);
             Checker.Assert(_headerPtrCache != null);
 

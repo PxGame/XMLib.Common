@@ -38,7 +38,7 @@ namespace XMLib
         public readonly static int headerSize = UnsafeUtility.SizeOf<BBHeader>();
         public readonly static int dataHeaderSize = UnsafeUtility.SizeOf<BBDataHeader>();
 
-        public ByteBuffer(int capacity)
+        private ByteBuffer(int capacity)
         {
             Checker.Assert(capacity > headerSize);
             _bufferPtr = (IntPtr)UnsafeUtility.Malloc(capacity, 1, Allocator.Persistent);
@@ -53,6 +53,11 @@ namespace XMLib
                 frontUsedSize = headerSize,
                 backUsedSize = 0
             };
+        }
+
+        public static ByteBuffer Create(int capacity)
+        {
+            return new ByteBuffer(capacity);
         }
 
         public BBData<T> Write<T>() where T : unmanaged, IByteBufferData
@@ -116,7 +121,7 @@ namespace XMLib
         internal BBDataHeader* FindHeaderPtrWithID(int id)
         {
             int count = headerPtr->count;
-            if (count <= 0) { return null; }
+            if (count < 0) { return null; }
 
             BBDataHeader* firstDataHandlerPtr = (BBDataHeader*)(_bufferPtr + headerSize);
             //TODO 可以优化为二分查找
@@ -158,7 +163,7 @@ namespace XMLib
             {
                 BBDataHeader* headerPtr = GetDataHeader(i);
                 IntPtr dataPtr = GetData(headerPtr);
-                Type t = TypeManager.Get(((BBDataHeader*)headerPtr)->typeId);
+                Type t = TypeManager.Get(headerPtr->typeId);
 
                 object obj = Marshal.PtrToStructure(dataPtr, t);
                 sb.AppendLine($"{headerPtr->ToString()}:{obj.ToString()}");
