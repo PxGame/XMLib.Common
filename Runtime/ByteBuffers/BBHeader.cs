@@ -18,6 +18,7 @@ namespace XMLib
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     internal struct BBHeader
     {
+        public int id;
         public int capacity;
         public int version;
         public int count;

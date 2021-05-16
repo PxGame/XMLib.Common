@@ -21,6 +21,7 @@ namespace XMLib
     /// </summary>
     public sealed unsafe class ByteBuffer : IDisposable
     {
+        public int id => headerPtr->id;
         public int version => headerPtr->version;
         public int capacity => headerPtr->capacity;
         public int count => headerPtr->count;
@@ -38,6 +39,9 @@ namespace XMLib
         public readonly static int headerSize = UnsafeUtility.SizeOf<BBHeader>();
         public readonly static int dataHeaderSize = UnsafeUtility.SizeOf<BBDataHeader>();
 
+        private readonly static Dictionary<int, ByteBuffer> _id2bb = new Dictionary<int, ByteBuffer>();
+        private static int _nextBBId = 1;
+
         private ByteBuffer(int capacity)
         {
             Checker.Assert(capacity > headerSize);
@@ -46,21 +50,27 @@ namespace XMLib
             //初始化头
             *headerPtr = new BBHeader()
             {
+                id = _nextBBId++,
                 capacity = capacity,
                 count = 0,
-                nextId = 0,
+                nextId = 1,
                 version = 0,
                 frontUsedSize = headerSize,
                 backUsedSize = 0
             };
+
+            _id2bb.Add(id, this);
         }
 
+        public static bool Has(int bbId) => _id2bb.ContainsKey(bbId);
+        public static ByteBuffer Get(int bbId) => _id2bb.TryGetValue(bbId, out ByteBuffer bb) ? bb : null;
         public static ByteBuffer Create(int capacity)
         {
-            return new ByteBuffer(capacity);
+            ByteBuffer bb = new ByteBuffer(capacity);
+            return bb;
         }
 
-        public BBData<T> Write<T>() where T : unmanaged, IByteBufferData
+        public BBDataCache<T> Write<T>() where T : unmanaged, IByteBufferData
         {
             int typeId = TypeManager.Get<T>();
             Checker.Assert(typeId != 0);
@@ -89,12 +99,12 @@ namespace XMLib
             headerPtr->frontUsedSize += dataHeaderSize;
             headerPtr->backUsedSize += dataSize;
 
-            return new BBData<T>(this, dataHeaderPtr, dataPtr);
+            return new BBDataCache<T>(this, dataHeaderPtr, dataPtr);
         }
 
-        public BBData<T> Write<T>(T data) where T : unmanaged, IByteBufferData
+        public BBDataCache<T> Write<T>(T data) where T : unmanaged, IByteBufferData
         {
-            BBData<T> item = Write<T>();
+            BBDataCache<T> item = Write<T>();
             UnsafeUtility.MemCpy(item.dataPtr, &data, item.size);
             return item;
         }
@@ -106,7 +116,7 @@ namespace XMLib
 
         public void Resize(int size)
         {
-            Checker.Assert(size >= capacity);
+            Checker.Assert(size >= usedSize);
             IntPtr nextBuffer = (IntPtr)UnsafeUtility.Malloc(size, 1, Allocator.Persistent);
             UnsafeUtility.MemCpy((void*)nextBuffer, (void*)_bufferPtr, headerPtr->frontUsedSize);
             UnsafeUtility.MemCpy((void*)(nextBuffer + headerPtr->frontUsedSize), (void*)(_bufferPtr + headerPtr->capacity - headerPtr->backUsedSize), headerPtr->backUsedSize);
@@ -147,11 +157,18 @@ namespace XMLib
             if (dataHeaderPtr == null) { return IntPtr.Zero; }
             return (_bufferPtr + headerPtr->capacity - (dataHeaderPtr->offset + dataHeaderPtr->size - 1) - 1);
         }
-
-        internal BBDataHeader* GetDataHeader(int index)
+        internal T* GetData<T>(int id) where T : unmanaged
         {
-            if (index < 0 || index >= headerPtr->count) { return null; }
-            return (BBDataHeader*)(_bufferPtr + headerSize + index * dataHeaderSize);
+            BBDataHeader* header = FindHeaderPtrWithID(id);
+            if (header == null) { return null; }
+            return GetData<T>(header);
+        }
+
+        internal IntPtr GetData(int id)
+        {
+            BBDataHeader* header = FindHeaderPtrWithID(id);
+            if (header == null) { return IntPtr.Zero; }
+            return GetData(header);
         }
 
         public void ShowMessage()
@@ -161,7 +178,7 @@ namespace XMLib
             sb.Append($"{ToString()}");
             for (int i = 0; i < headerPtr->count; i++)
             {
-                BBDataHeader* headerPtr = GetDataHeader(i);
+                BBDataHeader* headerPtr = (BBDataHeader*)(_bufferPtr + headerSize + i * dataHeaderSize);
                 IntPtr dataPtr = GetData(headerPtr);
                 Type t = TypeManager.Get(headerPtr->typeId);
 
@@ -192,6 +209,9 @@ namespace XMLib
                 if (disposing)
                 {//释放托管
                 }
+
+                //移除
+                _id2bb.Remove(id);
 
                 //释放非托管
                 if (_bufferPtr != IntPtr.Zero)
