@@ -16,11 +16,39 @@ using UnityEngine;
 
 namespace XMLib
 {
+    public unsafe partial class ByteBuffer
+    {
+        public readonly static int headerSize = UnsafeUtility.SizeOf<BBHeader>();
+        public readonly static int dataHeaderSize = UnsafeUtility.SizeOf<BBDataHeader>();
+
+        private readonly static Dictionary<int, ByteBuffer> _id2bb = new Dictionary<int, ByteBuffer>();
+        private static int _nextBBId = 1;
+
+        public static bool Has(int bbId) => _id2bb.ContainsKey(bbId);
+
+        public static ByteBuffer Get(int bbId) => _id2bb.TryGetValue(bbId, out ByteBuffer bb) ? bb : null;
+
+        public static ByteBuffer Create(int capacity)
+        {
+            ByteBuffer bb = new ByteBuffer(capacity);
+            return bb;
+        }
+    }
+
     /// <summary>
     /// ByteBuffer
     /// </summary>
-    public sealed unsafe class ByteBuffer : IDisposable
+    public sealed unsafe partial class ByteBuffer : IDisposable
     {
+        /// <summary>
+        /// |header|data|...|data body|
+        /// </summary>
+        private IntPtr _bufferPtr;
+
+        public bool isValid => !_isDisposed && _bufferPtr != IntPtr.Zero;
+
+        private BBHeader* headerPtr => (BBHeader*)_bufferPtr;
+
         public int id => headerPtr->id;
         public int version => headerPtr->version;
         public int capacity => headerPtr->capacity;
@@ -28,19 +56,6 @@ namespace XMLib
         public int usedSize => headerPtr->frontUsedSize + headerPtr->backUsedSize;
         public int freeSize => capacity - usedSize;
         public IntPtr bufferPtr => _bufferPtr;
-
-        /// <summary>
-        /// |header|data|...|data body|
-        /// </summary>
-        private IntPtr _bufferPtr;
-
-        private BBHeader* headerPtr => (BBHeader*)_bufferPtr;
-
-        public readonly static int headerSize = UnsafeUtility.SizeOf<BBHeader>();
-        public readonly static int dataHeaderSize = UnsafeUtility.SizeOf<BBDataHeader>();
-
-        private readonly static Dictionary<int, ByteBuffer> _id2bb = new Dictionary<int, ByteBuffer>();
-        private static int _nextBBId = 1;
 
         private ByteBuffer(int capacity)
         {
@@ -60,14 +75,6 @@ namespace XMLib
             };
 
             _id2bb.Add(id, this);
-        }
-
-        public static bool Has(int bbId) => _id2bb.ContainsKey(bbId);
-        public static ByteBuffer Get(int bbId) => _id2bb.TryGetValue(bbId, out ByteBuffer bb) ? bb : null;
-        public static ByteBuffer Create(int capacity)
-        {
-            ByteBuffer bb = new ByteBuffer(capacity);
-            return bb;
         }
 
         public BBDataCache<T> Write<T>() where T : unmanaged, IByteBufferData
@@ -131,7 +138,7 @@ namespace XMLib
         internal BBDataHeader* FindHeaderPtrWithID(int id)
         {
             int count = headerPtr->count;
-            if (count < 0) { return null; }
+            if (count <= 0) { return null; }
 
             BBDataHeader* firstDataHandlerPtr = (BBDataHeader*)(_bufferPtr + headerSize);
             //TODO 可以优化为二分查找
@@ -157,6 +164,7 @@ namespace XMLib
             if (dataHeaderPtr == null) { return IntPtr.Zero; }
             return (_bufferPtr + headerPtr->capacity - (dataHeaderPtr->offset + dataHeaderPtr->size - 1) - 1);
         }
+
         internal T* GetData<T>(int id) where T : unmanaged
         {
             BBDataHeader* header = FindHeaderPtrWithID(id);
@@ -200,11 +208,11 @@ namespace XMLib
 
         #region IDisposable Support
 
-        public bool isDisposed { get; private set; } = false; // 要检测冗余调用
+        private bool _isDisposed = false; // 要检测冗余调用
 
         private void Dispose(bool disposing)
         {
-            if (!isDisposed)
+            if (!_isDisposed)
             {
                 if (disposing)
                 {//释放托管
@@ -220,7 +228,7 @@ namespace XMLib
                     _bufferPtr = IntPtr.Zero;
                 }
 
-                isDisposed = true;
+                _isDisposed = true;
             }
         }
 

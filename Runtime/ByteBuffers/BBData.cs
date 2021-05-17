@@ -19,6 +19,10 @@ namespace XMLib
         internal int bbId;
         internal int id;
 
+        internal bool isValid => bbId != 0 && id != 0;
+
+        internal ByteBuffer GetBuffer() => ByteBuffer.Get(bbId);
+
         internal BBDataHeader* GetHeaderPtr()
         {
             ByteBuffer bb = ByteBuffer.Get(bbId);
@@ -35,41 +39,60 @@ namespace XMLib
 
         public BBData(int bbId, int id)
         {
+            Checker.Assert(bbId != 0 && id != 0);
             this.bbId = bbId;
             this.id = id;
         }
+
+        public BBData<T> ToBBData<T>() where T : unmanaged, IByteBufferData => new BBData<T>(bbId, id);
+
+        public BBData<T> ToBBDataCache<T>() where T : unmanaged, IByteBufferData => new BBDataCache<T>(bbId, id);
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public unsafe struct BBData<T> where T : unmanaged, IByteBufferData
     {
-        internal BBData bBData;
+        private BBData _bBData;
 
-        internal BBDataHeader* GetHeaderPtr() => bBData.GetHeaderPtr();
+        internal int bbId => _bBData.bbId;
+        internal int id => _bBData.id;
 
-        internal T* GetDataPtr() => (T*)bBData.GetDataPtr();
+        internal ByteBuffer GetBuffer() => ByteBuffer.Get(bbId);
+
+        internal BBDataHeader* GetHeaderPtr() => _bBData.GetHeaderPtr();
+
+        internal T* GetDataPtr() => (T*)_bBData.GetDataPtr();
 
         public BBData(int bbId, int id)
         {
-            bBData = new BBData(bbId, id);
+            _bBData = new BBData(bbId, id);
+        }
+
+        public static implicit operator BBData(BBData<T> data)
+        {
+            return data._bBData;
+        }
+
+        public static implicit operator BBDataCache<T>(BBData<T> data)
+        {
+            return new BBDataCache<T>(data.bbId, data.id);
         }
     }
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public unsafe struct BBDataCache<T> where T : unmanaged, IByteBufferData
     {
-        internal BBData<T> bBData;
-
-        public bool isValid => bBData.bBData.id > 0 && _buffer != null && !_buffer.isDisposed;
-        public int id => headerPtr->id;
-        public ref T data => ref *dataPtr;
-        public int typeId => headerPtr->typeId;
-        public int size => headerPtr->size;
-
+        private BBData<T> _bBData;
         private ByteBuffer _buffer;
         private int _version;
         private BBDataHeader* _headerPtrCache;
         private T* _dataPtrCache;
+
+        public bool isValid => _bBData.id != 0 && _buffer != null && !_buffer.isValid;
+        public int id => headerPtr->id;
+        public ref T data => ref *dataPtr;
+        public int typeId => headerPtr->typeId;
+        public int size => headerPtr->size;
 
         internal T* dataPtr
         {
@@ -91,9 +114,9 @@ namespace XMLib
 
         internal BBDataCache(ByteBuffer buffer, BBDataHeader* headerPtr, T* dataPtr)
         {
-            Checker.Assert(buffer != null && headerPtr != null && dataPtr != null);
+            Checker.Assert(buffer != null && buffer.isValid && headerPtr != null && dataPtr != null);
 
-            bBData = new BBData<T>(buffer.id, headerPtr->id);
+            _bBData = new BBData<T>(buffer.id, headerPtr->id);
 
             _buffer = buffer;
             _version = buffer.version;
@@ -103,33 +126,34 @@ namespace XMLib
 
         public BBDataCache(ByteBuffer buffer, int id)
         {
-            Checker.Assert(buffer != null && id > 0);
-            _headerPtrCache = buffer.FindHeaderPtrWithID(id);
-            Checker.Assert(_headerPtrCache != null);
+            Checker.Assert(buffer != null && id != 0);
 
-            _dataPtrCache = buffer.GetData<T>(_headerPtrCache);
-            Checker.Assert(_dataPtrCache != null);
-
-            bBData = new BBData<T>(buffer.id, id);
+            _bBData = new BBData<T>(buffer.id, id);
 
             _buffer = buffer;
             _version = buffer.version;
+            _headerPtrCache = buffer.FindHeaderPtrWithID(id);
+            _dataPtrCache = buffer.GetData<T>(_headerPtrCache);
+        }
+
+        public BBDataCache(int bbId, int id) : this(ByteBuffer.Get(bbId), id)
+        {
         }
 
         private void CheckVersion()
         {
-            Checker.Assert(isValid);
-            if (_buffer == null || _buffer.id != bBData.bBData.bbId)
+            if (_buffer == null)
             {
-                _buffer = ByteBuffer.Get(bBData.bBData.bbId);
+                _buffer = ByteBuffer.Get(_bBData.bbId);
             }
             else if (_version == _buffer.version)
             {
                 return;
             }
 
+            Checker.Assert(isValid);
             //版本发生变化，重新缓存指针
-            _headerPtrCache = _buffer.FindHeaderPtrWithID(bBData.bBData.id);
+            _headerPtrCache = _buffer.FindHeaderPtrWithID(_bBData.id);
             _dataPtrCache = _buffer.GetData<T>(_headerPtrCache);
             _version = _buffer.version;
         }
@@ -137,6 +161,16 @@ namespace XMLib
         public override string ToString()
         {
             return $"{*headerPtr}:{*dataPtr}";
+        }
+
+        public static implicit operator BBData(BBDataCache<T> data)
+        {
+            return data._bBData;
+        }
+
+        public static implicit operator BBData<T>(BBDataCache<T> data)
+        {
+            return data._bBData;
         }
     }
 }

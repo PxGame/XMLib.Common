@@ -15,7 +15,7 @@ namespace XMLib
 {
     public static class TypeManager
     {
-        private static List<Type> _types;
+        private static HashSet<Type> _types;
         private static Dictionary<int, Type> _id2Type;
         private static Dictionary<Type, int> _type2id;
         private static Dictionary<int, int> _id2size;
@@ -29,7 +29,7 @@ namespace XMLib
         {
             SuperLog.Log("TypeManager 初始化");
 
-            _types = new List<Type>();
+            _types = new HashSet<Type>();
 
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (var assembly in assemblies)
@@ -51,7 +51,7 @@ namespace XMLib
 
             foreach (var type in _types)
             {
-                int id = type.GetHashCode();
+                int id = Hash128.Compute(type.FullName).GetHashCode();
                 _id2Type.Add(id, type);
                 _type2id.Add(type, id);
                 _id2size.Add(id, UnsafeUtility.SizeOf(type));
