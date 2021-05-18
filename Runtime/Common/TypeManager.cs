@@ -52,6 +52,7 @@ namespace XMLib
             foreach (var type in _types)
             {
                 int id = Hash128.Compute(type.FullName).GetHashCode();
+                Checker.Assert(id != 0);
                 _id2Type.Add(id, type);
                 _type2id.Add(type, id);
                 _id2size.Add(id, UnsafeUtility.SizeOf(type));

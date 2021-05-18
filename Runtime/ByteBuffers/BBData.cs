@@ -57,6 +57,8 @@ namespace XMLib
         internal int bbId => _bBData.bbId;
         internal int id => _bBData.id;
 
+        public ref T data => ref *GetDataPtr();
+
         internal ByteBuffer GetBuffer() => ByteBuffer.Get(bbId);
 
         internal BBDataHeader* GetHeaderPtr() => _bBData.GetHeaderPtr();
@@ -88,8 +90,11 @@ namespace XMLib
         private BBDataHeader* _headerPtrCache;
         private T* _dataPtrCache;
 
-        public bool isValid => _bBData.id != 0 && _buffer != null && !_buffer.isValid;
-        public int id => headerPtr->id;
+        public bool isValid => _bBData.id != 0 && _buffer != null && _buffer.isValid;
+
+        internal int bbId => _bBData.bbId;
+        internal int id => _bBData.id;
+
         public ref T data => ref *dataPtr;
         public int typeId => headerPtr->typeId;
         public int size => headerPtr->size;
