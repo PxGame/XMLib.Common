@@ -45,6 +45,21 @@ namespace XMLib
             return results;
         }
 
+        public static List<Type> FindAllAssignable<T>()
+        {
+            List<Type> results = new List<Type>();
+
+            ForeachType((type) =>
+            {
+                if (!type.IsAbstract && typeof(T).IsAssignableFrom(type))
+                {
+                    results.Add(type);
+                }
+            });
+
+            return results;
+        }
+
         public static void ForeachTypeWithAttr<T>(Action<Type, T> callback) where T : Attribute
         {
             ForeachType((t) =>
