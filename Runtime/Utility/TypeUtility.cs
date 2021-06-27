@@ -15,6 +15,12 @@ namespace XMLib
     /// </summary>
     public static class TypeUtility
     {
+        public static string GetTypeName(this Type type)
+        {
+            string[] strs = type.AssemblyQualifiedName.Split(',');
+            return $"{strs[0]},{strs[1]}";
+        }
+
         public static string GetSimpleName(this Type type)
         {
             if (!type.IsGenericType)
