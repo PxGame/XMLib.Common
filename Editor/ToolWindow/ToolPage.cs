@@ -18,6 +18,8 @@ namespace XMLib
     {
         public ToolWindow main { get; set; }
 
+        public Vector2 scrollPosition { get; set; }
+
         public abstract string title { get; }
 
         public abstract void OnGUI();

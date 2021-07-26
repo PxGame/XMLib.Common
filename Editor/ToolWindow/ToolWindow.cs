@@ -58,7 +58,6 @@ namespace XMLib
 
         protected virtual void Awake()
         {
-            Init();
         }
 
         private void SaveSetting()
@@ -82,6 +81,8 @@ namespace XMLib
 
         protected virtual void OnEnable()
         {
+            Init();
+            autoRepaintOnSceneChange = true;
             lastSelect = -1;
             LoadSetting();
             isInited = false;
@@ -125,15 +126,22 @@ namespace XMLib
                     if (lastSelect >= 0)
                     {
                         ToolPage lastView = _views.Find(t => t.title == titles[lastSelect]);
-                        lastView.OnDisable();
+                        lastView?.OnDisable();
                     }
-                    view.OnEnable();
+
+                    lastSelect = setting.selectPage;
+                    view?.OnEnable();
                 }
 
-                view.OnGUI();
+                if (view != null)
+                {
+                    using (var scroll = new EditorGUILayout.ScrollViewScope(view.scrollPosition))
+                    {
+                        view.OnGUI();
+                        view.scrollPosition = scroll.scrollPosition;
+                    }
+                }
             }
-
-            lastSelect = setting.selectPage;
         }
     }
 }
