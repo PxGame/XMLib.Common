@@ -276,6 +276,32 @@ namespace XMLib
             DrawCapsule(height, radius, matrix);
         }
 
+        [Conditional("UNITY_EDITOR")]
+        [DebuggerStepThrough]
+        public void DrawAxes(Matrix4x4 matrix)
+        {
+            Vector3[] pos = new Vector3[4] {
+                matrix.MultiplyPoint(Vector3.zero),
+                matrix.MultiplyPoint(Vector3.up),
+                matrix.MultiplyPoint(Vector3.right),
+                matrix.MultiplyPoint(Vector3.forward)
+            };
+
+            PushColor(Color.green);
+            DrawLine(pos[0], pos[1]);
+            PopColor();
+            PushColor(Color.red);
+            DrawLine(pos[0], pos[2]);
+            PopColor();
+            PushColor(Color.blue);
+            DrawLine(pos[0], pos[3]);
+            PopColor();
+
+            PushColor(Color.white);
+            DrawSphere(0.1f, matrix);
+            PopColor();
+        }
+
         #region Extersion
 
         [Conditional("UNITY_EDITOR")]
