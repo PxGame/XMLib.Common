@@ -298,7 +298,7 @@ namespace XMLib
             PopColor();
 
             PushColor(Color.white);
-            DrawSphere(0.1f, matrix);
+            DrawBox(Vector3.one * 0.05f, matrix);
             PopColor();
         }
 
