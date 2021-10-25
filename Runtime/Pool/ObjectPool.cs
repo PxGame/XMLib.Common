@@ -51,7 +51,7 @@ namespace XMLib
             Stack<object> stack;
             if (!objStackDict.TryGetValue(tag, out stack))
             {
-                stack = new Stack<object>(32);
+                stack = new Stack<object>(primeSize);
                 objStackDict.Add(tag, stack);
             }
 
