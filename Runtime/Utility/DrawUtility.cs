@@ -549,6 +549,59 @@ namespace XMLib
         {
             UnityEditor.Handles.DrawAAConvexPolygon(vertices);
         }
+        
+        [DebuggerStepThrough]
+        public override void DrawSphere(float radius, Matrix4x4 matrix)
+        {
+#if UNITY_EDITOR
+            UnityEditor.SceneView sceneView = UnityEditor.SceneView.currentDrawingSceneView;
+            if (sceneView != null)
+            {
+                var camera = sceneView.camera;
+                var cameraTrans = camera.transform;
+                //Face to camera
+                Vector3 position = UnityEditor.Handles.matrix.MultiplyPoint(matrix.GetPosition());
+                Quaternion rotation;
+                float size;
+                if (camera.orthographic)
+                {
+                    rotation = Quaternion.LookRotation(-cameraTrans.forward, cameraTrans.up);
+                    size = radius;
+                }
+                else
+                {
+                    var vec = cameraTrans.position - position;
+                    // Calc distance and normalize
+                    var distance = vec.magnitude;
+                    Vector3 forward;
+                    if (distance > 9.999999747378752E-06)
+                        forward = vec / distance;
+                    else
+                        forward = Vector3.zero;
+                    var offset = radius * radius / distance;
+                    // Add offset
+                    position += forward * offset;
+                    rotation = Quaternion.LookRotation(forward, cameraTrans.up);
+                    size = radius * Mathf.Sin(Mathf.Acos(offset / radius));
+                }
+                var oldMatrix = UnityEditor.Handles.matrix;
+                var lookMatrix = Matrix4x4.TRS(position, rotation, Vector3.Scale(oldMatrix.lossyScale, matrix.lossyScale));
+                UnityEditor.Handles.matrix = Matrix4x4.identity;
+                DrawCircle(size, lookMatrix);
+                UnityEditor.Handles.matrix = oldMatrix;
+            }
+#endif
+
+            //绘制边界
+            bool oldFillColor = fillPolygon;
+            fillPolygon = false;
+            PushColor(outlineColor);
+            DrawCircle(radius, matrix);
+            DrawCircle(radius, matrix * Matrix4x4.Rotate(Quaternion.Euler(0, 90, 0)));
+            DrawCircle(radius, matrix * Matrix4x4.Rotate(Quaternion.Euler(90, 0, 0)));
+            PopColor();
+            fillPolygon = oldFillColor;
+        }
     }
 
 #endif
